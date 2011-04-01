@@ -1,0 +1,15 @@
+template_sets:
+  ajax_rating_templates:
+    index:
+      ajax_rating_javascript:
+        label: Ajax Rating Javascript
+        outfile: ajaxrating.js
+        rebuild_me: 0
+      ajax_rating_styles:
+        label: Ajax Rating Styles
+        outfile: ajaxrating.css
+        rebuild_me: 0
+    widget:
+      ajax_rating:
+        label: Ajax Rating
+

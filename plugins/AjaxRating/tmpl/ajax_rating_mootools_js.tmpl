@@ -1,0 +1,69 @@
+function pushRating(type,id,r,b,total,count,a) {
+  new Ajax('<$MTCGIRelativeURL$>plugins/AjaxRating/mt-vote.cgi', {postBody: 'obj_type='+type+'&r='+r+'&obj_id='+id+'&blog_id='+b+'&a='+a, onComplete: updatePage}).request();
+}
+
+function updatePage (request) {
+  var resp_arr = request.split('||');
+  if (resp_arr[0] == 'ERR') {
+    var msg = resp_arr[1];
+    var type = resp_arr[2];
+    var id = resp_arr[3];
+  }
+  if (resp_arr[0] == 'OK') {
+    var type = resp_arr[1];
+    var id = resp_arr[2];
+    var r = parseInt(resp_arr[3]);
+    var b = <$MTBlogID$>;
+    var total = parseInt(resp_arr[4])-r;
+    var count = parseInt(resp_arr[5])-1;
+    var a = 0;
+    var msg = 'Thanks for voting!';
+    var avg = Math.round(((total + r)/(count + 1))*10)/10;
+    if (type == 'comment') {
+      var new_width = Math.round(avg/<$MTAjaxRatingCommentMax$>*<$MTAjaxStarRaterWidth type='comment'$>);
+    } else {
+      var new_width = Math.round(avg/<$MTAjaxRatingEntryMax$>*<$MTAjaxStarRaterWidth type='entry'$>);
+    }
+    var e;
+    if (e = $('ajaxrating_' + type + '_' + id + '_avg')) e.innerHTML = avg;
+    if (e = $('ajaxrating_' + type + '_' + id + '_ttl')) e.innerHTML = total + r;
+    if (e = $('ajaxrating_' + type + '_' + id + '_cnt')) e.innerHTML = count + 1;
+    if (e = $('rater_li' + type + id)) e.style.width = new_width.toString() + 'px';
+    if (e = $('thumb' + type + id)) e.innerHTML = '';
+  }
+  if (e = $('thanks' + type + id)) e.innerHTML = msg;
+}
+
+function showComment(id) {
+   var threshold = $('threshold-' + id);
+   if (threshold) {threshold.innerHTML = ''; }
+   var comment = $('comment-' + id);
+   if (comment) {comment.style.display = 'block'; }
+}
+
+function hideComments(comments) {
+  var threshold = getCookie('threshold');
+  if (!threshold) { threshold = <$MTAjaxRatingDefaultThreshold$>; }
+  for (var i=0; i < comments.length - 1; i++) {
+      var comment = $('comment-' + comments[i]);
+      var total = $('ajaxrating_comment_' + comments[i] + '_ttl').innerHTML;
+      if (parseInt(total) < parseInt(threshold)) {
+        comment.style.display = 'none';
+        var threshold_span = $('threshold-' + comments[i]);
+        if (threshold_span) { threshold_span.style.display = 'block'; }
+      }
+  }
+  if (document.threshold_form) { document.threshold_form.threshold.value = threshold; }
+}
+
+function setThreshold (f) {
+  var now = new Date();
+  fixDate(now);
+  now.setTime(now.getTime() + 365 * 24 * 60 * 60 * 1000);
+  now = now.toGMTString();
+  setCookie('threshold', f.threshold.value, now, '/', '', '');
+}
+
+function reportComment (id) {
+  new Ajax('<$MTCGIRelativeURL$>plugins/AjaxRating/mt-report.cgi', {postBody: 'id='+id, onComplete: updateRating}).request();
+}

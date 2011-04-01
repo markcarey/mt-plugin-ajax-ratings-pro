@@ -1,0 +1,84 @@
+/*  styles for the unit rater     */
+.ratingblock {
+	width: 50%;
+	display:block;
+	border-bottom:1px solid #999;
+	padding-bottom:8px;
+	margin-bottom:8px;
+	}
+
+.loading {
+	height: <$MTAjaxStarUnitWidth$>px;
+	background: url('<$MTStaticWebPath$>plugins/AjaxRating/images/working.gif') 50% 50% no-repeat;
+	}
+	
+.unit-rating { /* the UL */
+	list-style:none;
+	margin: 0px;
+	padding:0px;
+	height: <$MTAjaxStarUnitWidth$>px;
+	position: relative;
+	background: url('<$MTStaticWebPath$>plugins/AjaxRating/images/starrating.gif') top left repeat-x;		
+	}
+
+.unit-rating li{
+    text-indent: -90000px;
+	padding:0px;
+	margin:0px;
+	/*\*/
+	float: left;
+	/* */
+	}
+	
+.unit-rating li a {
+	outline: none;
+	display:block;
+	width:<$MTAjaxStarUnitWidth$>px;
+	height: <$MTAjaxStarUnitWidth$>px;
+	text-decoration: none;
+	text-indent: -9000px;
+	z-index: 20;
+	position: absolute;
+	padding: 0px;
+	}
+	
+.unit-rating li a:hover{
+	background: url('<MTStaticWebPath>plugins/AjaxRating/images/starrating.gif') left center;
+	z-index: 2;
+	left: 0px;
+	}
+
+.unit-rating a.r1-unit{left: 0px;}
+.unit-rating a.r1-unit:hover{width:<$MTAjaxStarUnitWidth$>px;}
+.unit-rating a.r2-unit{left:<$MTAjaxStarUnitWidth$>px;}
+.unit-rating a.r2-unit:hover{width: <$MTAjaxStarUnitWidth mult_by="2"$>px;}
+.unit-rating a.r3-unit{left: <$MTAjaxStarUnitWidth mult_by="2"$>px;}
+.unit-rating a.r3-unit:hover{width: <$MTAjaxStarUnitWidth mult_by="3"$>px;}
+.unit-rating a.r4-unit{left: <$MTAjaxStarUnitWidth mult_by="3"$>px;}	
+.unit-rating a.r4-unit:hover{width: <$MTAjaxStarUnitWidth mult_by="4"$>px;}
+.unit-rating a.r5-unit{left: <$MTAjaxStarUnitWidth mult_by="4"$>px;}
+.unit-rating a.r5-unit:hover{width: <$MTAjaxStarUnitWidth mult_by="5"$>px;}
+.unit-rating a.r6-unit{left: <$MTAjaxStarUnitWidth mult_by="5"$>px;}
+.unit-rating a.r6-unit:hover{width: <$MTAjaxStarUnitWidth mult_by="6"$>px;}
+.unit-rating a.r7-unit{left: <$MTAjaxStarUnitWidth mult_by="6"$>px;}
+.unit-rating a.r7-unit:hover{width: <$MTAjaxStarUnitWidth mult_by="7"$>px;}
+.unit-rating a.r8-unit{left: <$MTAjaxStarUnitWidth mult_by="7"$>px;}
+.unit-rating a.r8-unit:hover{width: <$MTAjaxStarUnitWidth mult_by="8"$>px;}
+.unit-rating a.r9-unit{left: <$MTAjaxStarUnitWidth mult_by="8"$>px;}
+.unit-rating a.r9-unit:hover{width: <$MTAjaxStarUnitWidth mult_by="9"$>px;}
+.unit-rating a.r10-unit{left: <$MTAjaxStarUnitWidth mult_by="9"$>px;}
+.unit-rating a.r10-unit:hover{width: <$MTAjaxStarUnitWidth mult_by="10"$>px;}
+
+.unit-rating li.current-rating {
+	background: url('<MTStaticWebPath>plugins/AjaxRating/images/starrating.gif') left bottom;
+	position: absolute;
+	height: <$MTAjaxStarUnitWidth$>px;
+	display: block;
+	text-indent: -9000px;
+	z-index: 1;
+	}
+
+.voted {color:#999;}
+.thanks {color:#36AA3D;}
+
+.below-threshold {display: none}

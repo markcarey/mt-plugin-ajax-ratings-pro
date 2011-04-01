@@ -1,0 +1,6 @@
+Special Instructions if you plan on using Dynamic Publishing on MT 3.3x
+-----------------------------------------------
+
+If you are using MT 3.3x, then you will need to upload the contents of the 'php' folder (found in the same directory as this text file) to the 'php'directory of your MT install.  
+
+If you are running MT4, this is *not* required.
