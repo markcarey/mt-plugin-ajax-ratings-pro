@@ -8,6 +8,8 @@ use MT::Plugin;
 use AjaxRating::Vote;
 use AjaxRating::VoteSummary;
 
+use YAML::Tiny;
+
 sub listing {
     my $ctx = shift;
     my $args = shift;
@@ -142,6 +144,103 @@ sub listing_tags {
     my $args = shift;
     $args->{type} = 'tag';
     listing($ctx, $args);
+}
+
+# Return the number of votes for each score number on an object.
+sub listing_vote_distribution {
+    my ( $ctx, $args, $cond ) = @_;
+
+    # Get the object type and object ID (if not supplied through arguments).
+    my $obj_type = $args->{type};
+    if (!$obj_type) {
+        if ($ctx->stash('comment')) {
+            $obj_type = 'comment';
+        } else {
+            $obj_type = 'entry';
+        }
+    }
+    if ($obj_type eq 'trackback') { $obj_type = 'ping'; }
+    my $obj = $ctx->stash($obj_type);
+    my $obj_id = $obj->id if $obj;
+    if ($args->{id}) { $obj_id = $args->{id}; }
+
+    # Load the summary for this object.
+    my $votesummary = AjaxRating::VoteSummary->load({
+        obj_type => $obj_type,
+        obj_id   => $obj_id,
+    });
+
+    return '' if !$votesummary;
+
+    # Read the saved YAML vote_distribution, and convert it into a hash.
+    my $yaml = YAML::Tiny->read_string( $votesummary->vote_distribution );
+    
+    # If there is no vote_distribution data, we need to create it.
+    $yaml = _create_vote_distribution_data($votesummary) if !$yaml;
+
+    # Load the entry_max_points or comment_max_points config setting 
+    # (depending upon the object type), or just fall back to the value 10. 
+    # 10 is used as a fallback elsewhere for the max points, so it's a safe
+    # guess that it's good to use.
+    my $plugin = MT::Plugin::AjaxRating->instance;
+    my $max_points = $plugin->get_config_value(
+        $votesummary->obj_type.'_max_points',
+        'blog:'.$votesummary->blog_id
+    ) || '10';
+    
+    # Make sure that all possible scores have been marked--at least with a 0.
+    # The default value is set here (as opposed to in the foreach that outputs 
+    # the values) so that different types of raters (which may have positive
+    # or negative values) don't get confused.
+    my $count = 1;
+    while ( $count <= $max_points ) {
+        $yaml->[0]->{$count} = '0' if !$yaml->[0]->{$count};
+        $count++;
+    }
+
+    my $out = '';
+    my $vars = $ctx->{__stash}{vars};
+    $count = 0;
+
+    # Put together the variables that can be used inside this loop.
+    # <mt:Var name="score"> and <mt:Var name="vote"> are the important ones.
+    foreach my $score ( sort keys %{$yaml->[0]} ) {
+        local $vars->{'score'}       = $score;
+        local $vars->{'vote'}        = $yaml->[0]->{$score};
+        local $vars->{'__first__'}   = ( $count++ == 0 );
+        local $vars->{'__last__'}    = ( $count == $yaml->[0] );
+        local $vars->{'__odd__'}     = ($count % 2) == 1;
+        local $vars->{'__even__'}    = ($count % 2) == 0;
+        local $vars->{'__counter__'} = $count;
+
+        defined( $out .= $ctx->slurp( $args, $cond ) ) or return;
+    }
+    return $out;
+}
+
+sub _create_vote_distribution_data {
+    my ($votesummary) = @_;
+
+    # Use the Vote Summary object to load the vote data for this object id 
+    # and type.
+    my $iter = MT->model('ajaxrating_vote')->load_iter({
+        obj_id => $votesummary->obj_id,
+        obj_type => $votesummary->obj_type,
+    });
+
+    # Build the hash of votes by stepping through each vote.
+    my $yaml = YAML::Tiny->new;
+    while ( my $vote = $iter->() ) {
+        $yaml->[0]->{$vote->score} += 1;
+    }
+
+    # Convert the hash to a string and save the vote summary.
+    $votesummary->vote_distribution( $yaml->write_string() );
+    $votesummary->save or die $votesummary->errstr;
+
+    # Return the $yaml hash so that the vote distribution tag can continue
+    # to process.
+    return $yaml;
 }
 
 
@@ -285,7 +384,7 @@ sub rater {
     my $avg_score = 0;
     my $total_score = 0;
     my $vote_count = 0;
-    my $votesummary = AjaxRating::VoteSummary->load({ obj_type => $obj_type, obj_id => $obj_id });  
+    my $votesummary = AjaxRating::VoteSummary->load({ obj_type => $obj_type, obj_id => $obj_id });
     if ($votesummary) {
         $avg_score = $votesummary->avg_score;
         $vote_count = $votesummary->vote_count;

@@ -5,17 +5,18 @@ use MT::Object;
 @AjaxRating::VoteSummary::ISA = qw(MT::Object);
 __PACKAGE__->install_properties({
     column_defs => {
-        'id' => 'integer not null auto_increment',
-        'blog_id' => 'integer default 0',
-        'obj_type' =>   'string(50) not null',
-        'obj_id' =>     'integer default 0',
-        'author_id' =>  'integer default 0',
-        'vote_count' => 'integer default 0',
-        'total_score' => 'integer default 0',
-        'avg_score' => 'float default 0'
+        'id'                => 'integer not null auto_increment',
+        'blog_id'           => 'integer default 0',
+        'obj_type'          => 'string(50) not null',
+        'obj_id'            => 'integer default 0',
+        'author_id'         => 'integer default 0',
+        'vote_count'        => 'integer default 0',
+        'total_score'       => 'integer default 0',
+        'avg_score'         => 'float default 0',
+        'vote_distribution' => 'text',
     },
     indexes => {
-        id => 1,
+        #id => 1, # ID is automatically indexed by MT.
         blog_id => 1,
         obj_type => 1,
         obj_id => 1,

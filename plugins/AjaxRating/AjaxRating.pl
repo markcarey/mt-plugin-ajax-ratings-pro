@@ -186,6 +186,7 @@ sub init_registry {
                AjaxRatingTags => \&AjaxRating::listing_tags,
                AjaxRatingAuthors => \&AjaxRating::listing_authors,
                AjaxRatingUserVotes => \&AjaxRating::listing_user_votes,
+               AjaxRatingVoteDistribution => \&AjaxRating::listing_vote_distribution,
             },
         },
         tasks => {
