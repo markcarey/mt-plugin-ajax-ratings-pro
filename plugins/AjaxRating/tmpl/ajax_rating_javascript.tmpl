@@ -1,30 +1,30 @@
 function updateRating(request) {
-			/* alert(request.responseText);  // DEBUGGING */
-			var resp_arr = request.responseText.split("||");
-			if (resp_arr[0] == 'ERR') {
-				alert(resp_arr[1]);
-			}
+            /* alert(request.responseText);  // DEBUGGING */
+            var resp_arr = request.responseText.split("||");
+            if (resp_arr[0] == 'ERR') {
+                alert(resp_arr[1]);
+            }
 
-			if (resp_arr[0] == 'OK') {
-				var type = resp_arr[1];
-				var id = resp_arr[2];
-				var r = parseInt(resp_arr[3]);
-				var b = <$MTBlogID$>;
-				var total = parseInt(resp_arr[4]) - r;
+            if (resp_arr[0] == 'OK') {
+                var type = resp_arr[1];
+                var id = resp_arr[2];
+                var r = parseInt(resp_arr[3]);
+                var b = <$MTBlogID$>;
+                var total = parseInt(resp_arr[4]) - r;
                                 var count = parseInt(resp_arr[5]) -1;
                                 var a = 0;
                 //                var theUL = document.getElementById('rater_ul'+type+id); // the UL
-                //	        if (theUL) { theUL.innerHTML = '<li id="rater_li'+type+id+'" class="current-rating" style="width:0px"></div>'; }
+                //          if (theUL) { theUL.innerHTML = '<li id="rater_li'+type+id+'" class="current-rating" style="width:0px"></div>'; }
                                 updatePage(type,id,r,b,total,count,a);
-			}
+            }
 }
 
-		function pushRating(type,id,r,b,total,count,a) {
+        function pushRating(type,id,r,b,total,count,a) {
                         updatePage(type,id,r,b,total,count,a);
                 //        var theUL = document.getElementById('rater_ul'+type+id); // the UL
-                //	if (theUL) { theUL.innerHTML = '<div class="loading"></div>'; }
-      		        new ajax('<$MTCGIRelativeURL$>plugins/AjaxRating/mt-vote.cgi', {postBody: 'obj_type='+type+'&r='+r+'&obj_id='+id+'&blog_id='+b+'&a='+a, onComplete: updateRating});
-		}
+                //  if (theUL) { theUL.innerHTML = '<div class="loading"></div>'; }
+                    new ajax('<$MTCGIRelativeURL$>plugins/AjaxRating/mt-vote.cgi', {postBody: 'obj_type='+type+'&r='+r+'&obj_id='+id+'&blog_id='+b+'&a='+a, onComplete: updateRating});
+        }
 
 function updatePage (type,id,r,b,total,count,a) {
                         var avg = Math.round(((total + r)/(count + 1))*10)/10;
