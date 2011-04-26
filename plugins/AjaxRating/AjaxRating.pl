@@ -24,7 +24,7 @@ use MT;
 use AjaxRating;
 
 use vars qw($VERSION);
-$VERSION = '1.261';
+$VERSION = '1.3';
 my $plugin = new MT::Plugin::AjaxRating({
     name => "AJAX Rating Pro",
     description => "AJAX rating plugin for entries and comments and more. Pro version.",
