@@ -33,7 +33,7 @@ my $plugin = new MT::Plugin::AjaxRating({
     author_name => "Mark Carey",
     author_link => "http://mt-hacks.com/",
     object_classes => [ 'AjaxRating::Vote','AjaxRating::VoteSummary','AjaxRating::HotObject' ],
-    schema_version => "2",   # for plugin version 1.25
+    schema_version => "3",
     version => $VERSION,
     blog_config_template => \&AjaxRating::template,
     system_config_template => \&AjaxRating::system_template,
@@ -200,7 +200,18 @@ sub init_registry {
                 frequency => 60 * 60,   # run every hour
                 code => \&AjaxRating::delete_fraud
             },
-        }
+        },
+        upgrade_functions => {
+            add_vote_distribution => {
+                version_limit => 3,
+                priority => 1,
+                updater => {
+                    type => 'ajaxrating_votesummary',
+                    label => 'Calculating vote distributions.',
+                    code => \&AjaxRating::add_vote_distribution,
+                },
+            },
+        },
     };
     $component->registry($reg);
 }

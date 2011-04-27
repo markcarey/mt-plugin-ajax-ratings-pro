@@ -175,7 +175,8 @@ sub listing_vote_distribution {
     # Read the saved YAML vote_distribution, and convert it into a hash.
     my $yaml = YAML::Tiny->read_string( $votesummary->vote_distribution );
     
-    # If there is no vote_distribution data, we need to create it.
+    # If there is no vote_distribution data, we need to create it. This should
+    # have been done during the upgrade already.
     $yaml = _create_vote_distribution_data($votesummary) if !$yaml;
 
     # Load the entry_max_points or comment_max_points config setting 
@@ -1121,4 +1122,13 @@ sub rebuild_ar_templates {
         }
     }
 }
+
+# When upgrading to schema_version 3, vote distribution data needs to be 
+# calculated.
+sub add_vote_distribution {
+    my ($obj) = @_;
+
+    _create_vote_distribution_data( $obj );
+}
+
 1;
