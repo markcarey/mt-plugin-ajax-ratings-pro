@@ -8,6 +8,10 @@ Refer to the above URL for documentation on this plugin. The following documents
 
 Version 1.3 is converted to a `config.yaml` style plugin. Be sure to remove the old `AjaxRating.pl` file when upgrading. Also note that plugin data is stored differently, so you will need to re-set Ajax Rating Plugin Settings, at both the System and Blog level.
 
+# Configuration
+
+In System Overview > Plugins > Ajax Rating Pro > Settings, you'll find an option to Enable IP Checking. This checkbox provides an easy way to restrict votes by IP address. Disable during development for easy testing.
+
 # Tag Reference
 
 ## AjaxRatingVoteDistribution
