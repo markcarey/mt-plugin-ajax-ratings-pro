@@ -11,13 +11,6 @@ use YAML::Tiny;
 
 @AjaxRating::AddVote::ISA = qw( MT::App );
 
-# Normally, votes are restricted by IP address: 1 vote for 1 IP address per 
-# object. In a live environment this is fine, but when trying to test locally
-# it makes things a bear. Set $enable_ip_checking to '0' to disable IP address
-# restriction.
-my $enable_ip_checking = 1;
-#my $enable_ip_checking = 0;
-
 sub init {
     my $app = shift;
     $app->SUPER::init(@_) or return;
@@ -57,7 +50,8 @@ sub vote {
     # 'vote' datasource) and update the voting summary (in the 'votesummary' 
     # datasource). Lastly, republish, if required.
     my $vote;
-    if ($enable_ip_checking) {
+    if ( $plugin->get_config_value('enable_ip_checking', 'system') ) {
+        # IP checking is enabled
         $vote = AjaxRating::Vote->load({
             ip       => $app->remote_ip,
             obj_type => $q->param('obj_type'),

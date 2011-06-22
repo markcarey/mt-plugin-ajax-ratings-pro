@@ -972,9 +972,9 @@ sub system_template {
 <mtapp:setting
     id="hot_days"
     label="<__trans phrase="Days for Hot Lists">"
-    hint="Advanced feature: choose the numbers of days to used to determine which items are "hot". For example, if you choose 7 days, then only votes from the past 7 days will be tallied."
+    hint="Advanced feature: choose the numbers of days to used to determine which items are &ldquo;hot.&rdquo; For example, if you choose 7 days, then only votes from the past 7 days will be tallied."
     show_hint="1">
-    <input name="hot_days" type="text" size="3" value="<TMPL_VAR NAME=HOT_DAYS>"></input>
+    <input name="hot_days" type="text" size="3" value="<mt:Var name="hot_days">" />
 </mtapp:setting>
 
 <mtapp:setting
@@ -982,7 +982,7 @@ sub system_template {
     label="<__trans phrase="Enable Fraud Checker">"
     hint="Advanced feature: enabling the fraud checker will hourly check for recent votes on the same object that are from the same subnet. For example, if the checker found two recents votes on an entry from 123.456.789.111 and 123.456.789.222, it would delete the most recent of the two votes."
     show_hint="1">
-            <input name="enable_delete_fraud" type="checkbox"<TMPL_IF NAME=ENABLE_DELETE_FRAUD_ON>checked</TMPL_IF>></input>
+            <input name="enable_delete_fraud" type="checkbox"<mt:If name="enable_delete_fraud">checked</mt:If> />
 </mtapp:setting>
 
 <mtapp:setting
@@ -990,7 +990,15 @@ sub system_template {
     label="<__trans phrase="Number of Votes">"
     hint="If the fraud checker is enabled, it will scan this number of recent votes on each object that has recently been voted on. For performance reasons, don't set this too high."
     show_hint="1">
-            <input name="check_votes" type="text" size="3" value="<TMPL_VAR NAME=CHECK_VOTES>"></input>
+            <input name="check_votes" type="text" size="3" value="<mt:Var name="check_votes">" />
+</mtapp:setting>
+
+<mtapp:setting
+    id="enable_ip_checking"
+    label="<__trans phrase="Enable IP Checking">"
+    hint="Normally, votes are restricted by IP address: 1 vote for 1 IP address per rated object. In a live environment this is often fine, but during development it makes things a bear. You may also want to disable this feature if ratings are used internally, where all users may have the same IP address."
+    show_hint="1">
+            <input type="checkbox" name="enable_ip_checking" <mt:If name="enable_ip_checking">checked</mt:If> />
 </mtapp:setting>
 MT40
 

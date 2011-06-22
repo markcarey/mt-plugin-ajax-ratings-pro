@@ -36,6 +36,9 @@ settings:
         default: 0
     check_votes:
         default: 25
+    enable_ip_checking:
+        default: 1
+        scope: system
 
 object_types:
     ajaxrating_vote:        AjaxRating::Vote
