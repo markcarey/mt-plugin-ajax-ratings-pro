@@ -15,7 +15,6 @@ __PACKAGE__->install_properties({
         'avg_score' => 'float default 0'
     },
     indexes => {
-        id => 1,
         blog_id => 1,
         obj_type => 1,
         obj_id => 1,

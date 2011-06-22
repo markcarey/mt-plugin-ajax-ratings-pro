@@ -16,7 +16,6 @@ __PACKAGE__->install_properties({
         'vote_distribution' => 'text',
     },
     indexes => {
-        #id => 1, # ID is automatically indexed by MT.
         blog_id => 1,
         obj_type => 1,
         obj_id => 1,

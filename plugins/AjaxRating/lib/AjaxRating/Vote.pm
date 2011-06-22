@@ -16,7 +16,6 @@ __PACKAGE__->install_properties({
         'ip' => 'string(15)'
     },
     indexes => {
-        id => 1,
         voter_id => 1,
         blog_id => 1,
         obj_type => 1,
