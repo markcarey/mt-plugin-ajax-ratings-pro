@@ -1,6 +1,6 @@
 name:        'AJAX Rating Pro'
-id:          'ajaxratingpro'
-key:         'ajaxratingpro'
+id:          'ajaxrating'
+key:         'ajaxrating'
 description: 'AJAX rating plugin for entries and comments and more. Pro version.'
 doc_link:    http://mt-hacks.com/ajaxrating.html
 plugin_link: http://mt-hacks.com/ajaxrating.html
@@ -41,9 +41,9 @@ settings:
         scope: system
 
 object_types:
-    ajaxrating_vote:        AjaxRating::Vote
-    ajaxrating_votesummary: AjaxRating::VoteSummary
-    ajaxrating_hotobject:   AjaxRating::HotObject
+    ar_vote:      AjaxRating::Vote
+    ar_votesumm:  AjaxRating::VoteSummary
+    ar_hotobj: AjaxRating::HotObject
 
 tasks:
     refresh_hotobjects:
@@ -59,6 +59,7 @@ applications:
     cms:
         methods:
             ajaxrating_install_templates: AjaxRating::install_templates
+            ar_table_migration: AjaxRating::Upgrade::AbbrevTables::run
 
 callbacks:
     MT::Entry::pre_remove:    AjaxRating::entry_delete_handler
@@ -109,14 +110,17 @@ upgrade_functions:
         version_limit: 3
         priority: 1
         updater:
-            type:  ajaxrating_votesummary
+            type:  ar_votesumm
             label: 'Ajax Ratings Pro: Calculating vote distributions.'
             code:  $AjaxRating::AjaxRating::upgrade_add_vote_distribution
-    # Doesn't ever access plugindata?
-    # migrate_plugin_data:
-    #     version_limit: 4
-    #     priority: 1
-    #     updater:
-    #         type: plugindata
-    #         label: 'Ajax Rating Pro: Upgrading plugin data.'
-    #         code: $AjaxRating::AjaxRating::upgrade_migrate_plugin_data
+    migrate_plugin_data:
+        version_limit: 3
+        priority: 1
+        updater:
+            type:  plugindata
+            label: 'Ajax Rating Pro: Upgrading plugin data.'
+            code:  $AjaxRating::AjaxRating::upgrade_migrate_plugin_data
+    abbrev_tables:
+        version_limit: 3
+        priority: 5
+        code: $AjaxRating::AjaxRating::Upgrade::AbbrevTables::run

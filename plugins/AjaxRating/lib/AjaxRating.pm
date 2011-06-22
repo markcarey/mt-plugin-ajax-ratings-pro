@@ -175,7 +175,7 @@ sub listing_vote_distribution {
     return '' if !$votesummary;
 
     # Read the saved YAML vote_distribution, and convert it into a hash.
-    my $yaml = YAML::Tiny->read_string( $votesummary->vote_distribution );
+    my $yaml = YAML::Tiny->read_string( $votesummary->vote_dist );
     
     # If there is no vote_distribution data, we need to create it. This should
     # have been done during the upgrade already.
@@ -238,7 +238,7 @@ sub _create_vote_distribution_data {
     }
 
     # Convert the hash to a string and save the vote summary.
-    $votesummary->vote_distribution( $yaml->write_string() );
+    $votesummary->vote_dist( $yaml->write_string() );
     $votesummary->save or die $votesummary->errstr;
 
     # Return the $yaml hash so that the vote distribution tag can continue
@@ -1030,14 +1030,12 @@ sub upgrade_add_vote_distribution {
 # schema_version 4 reflects the move to the config.yaml style plugin. Plugin
 # data was previously saved with the name "AJAX Rating Pro" which isn't easily
 # accessible, so update it to use "ajaxrating."
-sub upgrade_plugin_data {
-    my ($obj) = @_;
-use Data::Dumper;
-MT->log('Working with the plugin '.Dumper($obj));
-    
-    if ($obj->plugin eq 'AJAX Rating Pro') {
-        $obj->plugin('ajaxrating');
-        $obj->save or die $obj->errstr;
+sub upgrade_migrate_plugin_data {
+    my ($pdata) = @_;
+
+    if ($pdata->plugin eq 'AJAX Rating Pro') {
+        $pdata->plugin('ajaxrating');
+        $pdata->save or die $pdata->errstr;
     }
 }
 

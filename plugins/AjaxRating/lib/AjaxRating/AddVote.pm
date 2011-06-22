@@ -103,13 +103,13 @@ sub vote {
 
         # Update the voting distribution, which makes it easy to output 
         # "X Stars has received Y votes"
-        my $yaml = YAML::Tiny->read_string( $votesummary->vote_distribution );
+        my $yaml = YAML::Tiny->read_string( $votesummary->vote_dist );
         $yaml = YAML::Tiny->new if !$yaml; # No previously-saved data.
 
         # Increase the vote tally for this score by 1.
         $yaml->[0]->{$vote->score} += 1;
 
-        $votesummary->vote_distribution( $yaml->write_string() );
+        $votesummary->vote_dist( $yaml->write_string() );
         $votesummary->save or die $votesummary->errstr;
 
         # Now that the vote has been recorded, rebuild the required pages.
