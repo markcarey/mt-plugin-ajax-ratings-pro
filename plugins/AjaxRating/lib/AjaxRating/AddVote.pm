@@ -38,8 +38,7 @@ sub vote {
 
     # Check that the submitted vote has been set up for this object type on 
     # this blog.
-    use MT::Plugin;
-    my $plugin = MT::Plugin::AjaxRating->instance;
+    my $plugin = MT->component('ajaxrating');
     my $config = $plugin->get_config_hash('blog:'.$q->param('blog_id'));
     my $obj_type = $q->param('obj_type');
     return "ERR||Invalid object type."

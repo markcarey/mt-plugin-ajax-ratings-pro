@@ -1,7 +1,9 @@
 #########################################################
 
 package AjaxRating;
+
 use strict;
+use warnings;
 
 use MT;
 use MT::Plugin;
@@ -183,7 +185,7 @@ sub listing_vote_distribution {
     # (depending upon the object type), or just fall back to the value 10. 
     # 10 is used as a fallback elsewhere for the max points, so it's a safe
     # guess that it's good to use.
-    my $plugin = MT::Plugin::AjaxRating->instance;
+    my $plugin = MT->component('ajaxrating');
     my $max_points = $plugin->get_config_value(
         $votesummary->obj_type.'_max_points',
         'blog:'.$votesummary->blog_id
@@ -395,7 +397,7 @@ sub rater {
     my $html;
 
     if ($rater_type eq 'star') {
-        my $plugin = MT::Plugin::AjaxRating->instance;
+        my $plugin = MT->component('ajaxrating');
         my $config = $plugin->get_config_hash('blog:'.$blog->id);
         my $unit_width = $config->{unit_width};
         my $max_setting = $obj_type . '_max_points';
@@ -467,7 +469,7 @@ sub entry_max {
     my $ctx = shift;
     my $args = shift;
     my $blog = $ctx->stash('blog');
-    my $plugin = MT::Plugin::AjaxRating->instance;
+    my $plugin = MT->component('ajaxrating');
     my $config = $plugin->get_config_hash('blog:'.$blog->id);
     $config->{entry_max_points};
 }
@@ -476,7 +478,7 @@ sub comment_max {
     my $ctx = shift;
     my $args = shift;
     my $blog = $ctx->stash('blog');
-    my $plugin = MT::Plugin::AjaxRating->instance;
+    my $plugin = MT->component('ajaxrating');
     my $config = $plugin->get_config_hash('blog:'.$blog->id);
     $config->{comment_max_points};
 }
@@ -486,7 +488,7 @@ sub star_rater_width {
     my $ctx = shift;
     my $args = shift;
     my $blog = $ctx->stash('blog');
-    my $plugin = MT::Plugin::AjaxRating->instance;
+    my $plugin = MT->component('ajaxrating');
     my $config = $plugin->get_config_hash('blog:'.$blog->id);
     my $obj_type = $args->{type} || 'entry';
     my $max_setting = $obj_type . '_max_points';
@@ -497,7 +499,7 @@ sub star_rater_avg_score_width {
     my $ctx = shift;
     my $args = shift;
     my $blog = $ctx->stash('blog');
-    my $plugin = MT::Plugin::AjaxRating->instance;
+    my $plugin = MT->component('ajaxrating');
     my $config = $plugin->get_config_hash('blog:'.$blog->id);
     my $total_width = star_rater_width($ctx,$args);
     my $avg_score = ajax_rating_avg_score($ctx,$args);
@@ -510,7 +512,7 @@ sub star_unit_width {
     my $ctx = shift;
     my $args = shift;
     my $blog = $ctx->stash('blog');
-    my $plugin = MT::Plugin::AjaxRating->instance;
+    my $plugin = MT->component('ajaxrating');
     my $config = $plugin->get_config_hash('blog:'.$blog->id);
     my $unit_width = $config->{unit_width};
     if ($args->{mult_by}) { $unit_width = $unit_width * $args->{mult_by}; }
@@ -521,7 +523,7 @@ sub default_threshold {
     my $ctx = shift;
     my $args = shift;
     my $blog = $ctx->stash('blog');
-    my $plugin = MT::Plugin::AjaxRating->instance;
+    my $plugin = MT->component('ajaxrating');
     my $config = $plugin->get_config_hash('blog:'.$blog->id);
     my $threshold = $config->{comment_threshold};
     if ($threshold eq 'all') { $threshold = -9999; }
@@ -532,7 +534,7 @@ sub default_threshold {
 sub below_threshold {
     my $ctx = shift;
     my $blog = $ctx->stash('blog');
-    my $plugin = MT::Plugin::AjaxRating->instance;
+    my $plugin = MT->component('ajaxrating');
     my $config = $plugin->get_config_hash('blog:'.$blog->id);
     my $comment = $ctx->stash('comment');
     my $votesummary = AjaxRating::VoteSummary->load({ obj_type => 'comment', obj_id => $comment->id });
@@ -557,7 +559,7 @@ sub refresh_hot {
     my %vs_terms = ();
     my %vs_args = ();
     my $start_refresh = time;
-    my $plugin = MT::Plugin::AjaxRating->instance;
+    my $plugin = MT->component('ajaxrating');
     my $config = $plugin->get_config_hash('system');
     my $days = $args->{days} || $config->{hot_days} || 7;
     my @ago = gmtime(time - 3600 * 24 * $days);
@@ -609,7 +611,7 @@ sub delete_fraud {
     my %vs_terms = ();
     my %vs_args = ();
     my $start_task = time;
-    my $plugin = MT::Plugin::AjaxRating->instance;
+    my $plugin = MT->component('ajaxrating');
     my $config = $plugin->get_config_hash('system');
     if (!$config->{enable_delete_fraud}) {
         return '';
@@ -839,100 +841,13 @@ sub template {
     my $app = MT->instance;
     my $blog_id = $app->{query}->param('blog_id');
     my $tmpl;
-    if (MT->version_number < 4.0) {
-            $tmpl = <<MT33;
-<p>
-AJAX Rating enables visitors to rate items such as entries and comments.
-</p>
-
-<div class="setting">
-        <div class="label"><label for="templates">Install Templates</label></div>
-        <div class="field">
-        <p><a href="<TMPL_VAR NAME=SCRIPT_URL>?__mode=ajaxrating_install_templates&blog_id=$blog_id">Click here to install the Ajax Rating templates for this blog</a>.</p><br />
-        </div>
-
-        <div class="label"><label for="entry_mode">Entry Mode</label></div>
-        <div class="field">
-            <select name="entry_mode">
-                <option value="0"<TMPL_IF NAME=ENTRY_MODE_0> selected="selected"</TMPL_IF>>Off</option>
-                <option value="1"<TMPL_IF NAME=ENTRY_MODE_1> selected="selected"</TMPL_IF>>Thumbs Up/Down</option>
-                <option value="2"<TMPL_IF NAME=ENTRY_MODE_2> selected="selected"</TMPL_IF>>Star/Point Rating</option>
-            </select>
-            <p>Choose the mode to use for rating entries.</p><br />
-        </div>
-
-        <div class="label"><label for="entry_max_points">Entry Max Points</label></div>
-        <div class="field">
-            <select name="entry_max_points">
-                <option value="1"<TMPL_IF NAME=ENTRY_MAX_POINTS_1> selected="selected"</TMPL_IF>>1</option>
-                <option value="2"<TMPL_IF NAME=ENTRY_MAX_POINTS_2> selected="selected"</TMPL_IF>>2</option>
-                <option value="3"<TMPL_IF NAME=ENTRY_MAX_POINTS_3> selected="selected"</TMPL_IF>>3</option>
-                <option value="4"<TMPL_IF NAME=ENTRY_MAX_POINTS_4> selected="selected"</TMPL_IF>>4</option>
-                <option value="5"<TMPL_IF NAME=ENTRY_MAX_POINTS_5> selected="selected"</TMPL_IF>>5</option>
-                <option value="6"<TMPL_IF NAME=ENTRY_MAX_POINTS_6> selected="selected"</TMPL_IF>>6</option>
-                <option value="7"<TMPL_IF NAME=ENTRY_MAX_POINTS_7> selected="selected"</TMPL_IF>>7</option>
-                <option value="8"<TMPL_IF NAME=ENTRY_MAX_POINTS_8> selected="selected"</TMPL_IF>>8</option>
-                <option value="9"<TMPL_IF NAME=ENTRY_MAX_POINTS_9> selected="selected"</TMPL_IF>>9</option>
-                <option value="10"<TMPL_IF NAME=ENTRY_MAX_POINTS_10> selected="selected"</TMPL_IF>>10</option>
-            </select>
-            <p>Choose the maximum number of points or stars when rating entries.</p><br />
-        </div>
-<TMPL_IF NAME=RATINGL_0>
-        <div class="label"><label for="comment_mode">Comment Mode</label></div>
-        <div class="field">
-            <select name="comment_mode">
-                <option value="0"<TMPL_IF NAME=COMMENT_MODE_0> selected="selected"</TMPL_IF>>Off</option>
-                <option value="1"<TMPL_IF NAME=COMMENT_MODE_1> selected="selected"</TMPL_IF>>Thumbs Up/Down</option>
-                <option value="2"<TMPL_IF NAME=COMMENT_MODE_2> selected="selected"</TMPL_IF>>Star/Point Rating</option>
-            </select>
-            <p>Choose the mode to use for rating comments.</p><br />
-        </div>
-
-        <div class="label"><label for="comment_max_points">Comment Max Points</label></div>
-        <div class="field">
-            <select name="comment_max_points">
-                <option value="1"<TMPL_IF NAME=COMMENT_MAX_POINTS_1> selected="selected"</TMPL_IF>>1</option>
-                <option value="2"<TMPL_IF NAME=COMMENT_MAX_POINTS_2> selected="selected"</TMPL_IF>>2</option>
-                <option value="3"<TMPL_IF NAME=COMMENT_MAX_POINTS_3> selected="selected"</TMPL_IF>>3</option>
-                <option value="4"<TMPL_IF NAME=COMMENT_MAX_POINTS_4> selected="selected"</TMPL_IF>>4</option>
-                <option value="5"<TMPL_IF NAME=COMMENT_MAX_POINTS_5> selected="selected"</TMPL_IF>>5</option>
-                <option value="6"<TMPL_IF NAME=COMMENT_MAX_POINTS_6> selected="selected"</TMPL_IF>>6</option>
-                <option value="7"<TMPL_IF NAME=COMMENT_MAX_POINTS_7> selected="selected"</TMPL_IF>>7</option>
-                <option value="8"<TMPL_IF NAME=COMMENT_MAX_POINTS_8> selected="selected"</TMPL_IF>>8</option>
-                <option value="9"<TMPL_IF NAME=COMMENT_MAX_POINTS_9> selected="selected"</TMPL_IF>>9</option>
-                <option value="10"<TMPL_IF NAME=COMMENT_MAX_POINTS_10> selected="selected"</TMPL_IF>>10</option>
-            </select>
-            <p>Choose the maximum number of points or stars when rating entries.</p><br />
-        </div>
-
-        <div class="label"><label for="comment_threshold">Default Comment Threshold</label></div>
-        <div class="field">
-            <input name="comment_threshold" type="text" size="3" value="<TMPL_VAR NAME=COMMENT_THRESHOLD>"></input>&nbsp;
-            <p>Advanced feature: choose the default rating or total score threshold for comments to be displayed.</p><br />
-        </div>
-</TMPL_IF>
-        <div class="label"><label for="unit_width">Star Icon Width</label></div>
-        <div class="field">
-            <input name="unit_width" type="text" value="<TMPL_VAR NAME=UNIT_WIDTH>"></input>&nbsp;
-            <p>Advanced feature: choose the width of the star icon. Default is 30.</p><br />
-        </div>
-        <div class="label"><label for="rebuild">Rebuild After a Vote</label></div>
-        <div class="field">
-            <select name="rebuild">
-                <option value="0"<TMPL_IF NAME=REBUILD_0> selected="selected"</TMPL_IF>>No Rebuilds</option>
-                <option value="1"<TMPL_IF NAME=REBUILD_1> selected="selected"</TMPL_IF>>Rebuild Entry Only</option>
-                <option value="2"<TMPL_IF NAME=REBUILD_2> selected="selected"</TMPL_IF>>Rebuild Entry, Archives, Indexes</option>
-                <option value="3"<TMPL_IF NAME=REBUILD_3> selected="selected"</TMPL_IF>>Rebuild Indexes Only</option>
-            </select>
-            <p>Choose an option to rebuild pages after a vote is registered. You should only rebuild those pages where you are displaying ratings. WARNING: Rebuilding can affect performance on high-traffic sites with a lot of active voting.</p><br />
-        </div>
-        <input name="ratingl" type="hidden" value="<TMPL_VAR NAME=RATINGL>"></input>
-
-</div>
-MT33
-    } else {
-        rebuild_ar_templates($app);
-        $tmpl = <<MT40;
+    MT->log($plugin->id);
+    rebuild_ar_templates($app);
+    
+    # If the Template Installer plugin is installed, show the "Install 
+    # Templates" link.
+    if ( eval { MT->component('TemplateInstaller') } ) {
+        $tmpl = <<HTML;
 <mtapp:setting
     id="install_ajaxrating_templates"
     label="<__trans phrase="Install Ajax Rating Templates">"
@@ -944,8 +859,11 @@ MT33
         <a href="javascript:void(0)" onclick="return openDialog(false, 'install_blog_templates','template_path=plugins/AjaxRating/default_templates&amp;set=ajax_rating_templates&amp;blog_id=$blog_id&amp;return_args=__mode%3Dcfg_plugins%26%26blog_id%3D$blog_id')" class="primary-button"><__trans phrase="Install Templates"></a>
     </div>
 
-</mtapp:setting>        
+</mtapp:setting>
+HTML
+    }
 
+    $tmpl .= <<MT40;
 <mtapp:setting
     id="entry_mode"
     label="<__trans phrase="Entry Mode">"
@@ -956,7 +874,7 @@ MT33
                 <option value="1"<TMPL_IF NAME=ENTRY_MODE_1> selected="selected"</TMPL_IF>>Thumbs Up/Down</option>
                 <option value="2"<TMPL_IF NAME=ENTRY_MODE_2> selected="selected"</TMPL_IF>>Star/Point Rating</option>
             </select>
-            <p>Choose the mode to use for rating entries.</p><br />
+            <p>Choose the mode to use for rating entries.</p>
 </mtapp:setting>
 
 <mtapp:setting
@@ -976,7 +894,7 @@ MT33
                 <option value="9"<TMPL_IF NAME=ENTRY_MAX_POINTS_9> selected="selected"</TMPL_IF>>9</option>
                 <option value="10"<TMPL_IF NAME=ENTRY_MAX_POINTS_10> selected="selected"</TMPL_IF>>10</option>
             </select>
-            <p>Choose the maximum number of points or stars when rating entries.</p><br />
+            <p>Choose the maximum number of points or stars when rating entries.</p>
 </mtapp:setting>
 <TMPL_IF NAME=RATINGL_0>
 <mtapp:setting
@@ -989,7 +907,7 @@ MT33
                 <option value="1"<TMPL_IF NAME=COMMENT_MODE_1> selected="selected"</TMPL_IF>>Thumbs Up/Down</option>
                 <option value="2"<TMPL_IF NAME=COMMENT_MODE_2> selected="selected"</TMPL_IF>>Star/Point Rating</option>
             </select>
-            <p>Choose the mode to use for rating comments.</p><br />
+            <p>Choose the mode to use for rating comments.</p>
 </mtapp:setting>
 
 <mtapp:setting
@@ -1009,7 +927,7 @@ MT33
                 <option value="9"<TMPL_IF NAME=COMMENT_MAX_POINTS_9> selected="selected"</TMPL_IF>>9</option>
                 <option value="10"<TMPL_IF NAME=COMMENT_MAX_POINTS_10> selected="selected"</TMPL_IF>>10</option>
             </select>
-            <p>Choose the maximum number of points or stars when rating entries.</p><br />
+            <p>Choose the maximum number of points or stars when rating entries.</p>
 </mtapp:setting>
 
 <mtapp:setting
@@ -1018,7 +936,7 @@ MT33
     hint=""
     show_hint="0">
             <input name="comment_threshold" type="text" size="3" value="<TMPL_VAR NAME=COMMENT_THRESHOLD>"></input>&nbsp;
-            <p>Advanced feature: choose the default rating or total score threshold for comments to be displayed.</p><br />
+            <p>Advanced feature: choose the default rating or total score threshold for comments to be displayed.</p>
 </mtapp:setting>
 </TMPL_IF>
 <mtapp:setting
@@ -1027,7 +945,7 @@ MT33
     hint=""
     show_hint="0">
             <input name="unit_width" type="text" value="<TMPL_VAR NAME=UNIT_WIDTH>"></input>&nbsp;
-            <p>Advanced feature: choose the width of the star icon. Default is 30.</p><br />
+            <p>Advanced feature: choose the width of the star icon. Default is 30.</p>
 </mtapp:setting>
 <mtapp:setting
     id="rebuild_after_vote"
@@ -1040,47 +958,17 @@ MT33
                 <option value="2"<TMPL_IF NAME=REBUILD_2> selected="selected"</TMPL_IF>>Rebuild Entry, Archives, Indexes</option>
                 <option value="3"<TMPL_IF NAME=REBUILD_3> selected="selected"</TMPL_IF>>Rebuild Indexes Only</option>
             </select>
-            <p>Choose an option to rebuild pages after a vote is registered. You should only rebuild those pages where you are displaying ratings. WARNING: Rebuilding can affect performance on high-traffic sites with a lot of active voting.</p><br />
+            <p>Choose an option to rebuild pages after a vote is registered. You should only rebuild those pages where you are displaying ratings. WARNING: Rebuilding can affect performance on high-traffic sites with a lot of active voting.</p>
 </mtapp:setting>
         <input name="ratingl" type="hidden" value="<TMPL_VAR NAME=RATINGL>"></input>
 MT40
-    }
-    $tmpl;
+
+    return $tmpl;
 }
 
 sub system_template {
     my ($plugin, $param) = @_;
-    my $tmpl;
-    if (MT->version_number < 4.0) {
-        $tmpl = <<MT33;
-<p>AJAX Rating enables visitors to rate items such as entries and comments. Note that the rest of the settings must be made at the blog level.</p>
-
-<div class="setting">
-        <div class="label"><label for="hot_days">Days for Hot Lists</label></div>
-        <div class="field">
-            <input name="hot_days" type="text" size="3" value="<TMPL_VAR NAME=HOT_DAYS>"></input>&nbsp;
-            <p>Advanced feature: choose the numbers of days to used to determine which items are "hot". For example, if you choose 7 days, then only votes from the past 7 days will be tallied.</p><br />
-        </div>
-</div>
-
-<div class="setting">
-        <div class="label"><label for="enable_delete_fraud">Enable Fraud Checker</label></div>
-        <div class="field">
-            <input name="enable_delete_fraud" type="checkbox"<TMPL_IF NAME=ENABLE_DELETE_FRAUD_ON>checked</TMPL_IF>></input>    &nbsp;
-            <p>Advanced feature: enabling the fraud checker will hourly check for recent votes on the same object that are from the same subnet. For example, if the checker found two recents votes on an entry from 123.456.789.111 and 123.456.789.222, it would delete the most recent of the two votes.</p><br />
-        </div>
-</div>
-
-<div class="setting">
-        <div class="label"><label for="check_votes">Number of Votes</label></div>
-        <div class="field">
-            <input name="check_votes" type="text" size="3" value="<TMPL_VAR NAME=CHECK_VOTES>"></input>&nbsp;
-            <p>If the fraud checker is enabled, it will scan this number of recent votes on each object that has recently been voted on. For performance reasons, don't set this too high.</p><br />
-        </div>
-</div>
-MT33
-    } else {
-        $tmpl = <<MT40;
+    my $tmpl = <<MT40;
 <mtapp:setting
     id="hot_days"
     label="<__trans phrase="Days for Hot Lists">"
@@ -1105,7 +993,7 @@ MT33
             <input name="check_votes" type="text" size="3" value="<TMPL_VAR NAME=CHECK_VOTES>"></input>
 </mtapp:setting>
 MT40
-    }
+
     return $tmpl;
 }
 
@@ -1125,10 +1013,24 @@ sub rebuild_ar_templates {
 
 # When upgrading to schema_version 3, vote distribution data needs to be 
 # calculated.
-sub add_vote_distribution {
+sub upgrade_add_vote_distribution {
     my ($obj) = @_;
 
     _create_vote_distribution_data( $obj );
+}
+
+# schema_version 4 reflects the move to the config.yaml style plugin. Plugin
+# data was previously saved with the name "AJAX Rating Pro" which isn't easily
+# accessible, so update it to use "ajaxrating."
+sub upgrade_plugin_data {
+    my ($obj) = @_;
+use Data::Dumper;
+MT->log('Working with the plugin '.Dumper($obj));
+    
+    if ($obj->plugin eq 'AJAX Rating Pro') {
+        $obj->plugin('ajaxrating');
+        $obj->save or die $obj->errstr;
+    }
 }
 
 1;

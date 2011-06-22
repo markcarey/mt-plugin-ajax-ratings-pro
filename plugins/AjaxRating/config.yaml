@@ -1,0 +1,119 @@
+name:        'AJAX Rating Pro'
+id:          'ajaxratingpro'
+key:         'ajaxratingpro'
+description: 'AJAX rating plugin for entries and comments and more. Pro version.'
+doc_link:    http://mt-hacks.com/ajaxrating.html
+plugin_link: http://mt-hacks.com/ajaxrating.html
+author_name: 'Mark Carey'
+author_link: http://mt-hacks.com/
+schema_version: 3
+version: 1.3
+blog_config_template:
+    code: AjaxRating::template
+system_config_template:
+    code: AjaxRating::system_template
+
+settings:
+    entry_mode:
+        default: 0
+    entry_max_points:
+        default: 5
+    comment_mode:
+        default: 0
+    comment_max_points:
+        default: 5
+    comment_threshold:
+        default: 'all'
+    unit_width:
+        default: 30
+    rebuild:
+        default: 0
+    ratingl:
+        default: 0
+    hot_days:
+        default: 7
+    enable_delete_fraud:
+        default: 0
+    check_votes:
+        default: 25
+
+object_types:
+    ajaxrating_vote:        AjaxRating::Vote
+    ajaxrating_votesummary: AjaxRating::VoteSummary
+    ajaxrating_hotobject:   AjaxRating::HotObject
+
+tasks:
+    refresh_hotobjects:
+        name:      'Refresh Hot Objects'
+        frequency: 3600   # run every hour
+        code:      AjaxRating::refresh_hot
+    delete_fraud_votes:
+        name:      'Delete Fraud Votes'
+        frequency: 3600   # run every hour
+        code:      AjaxRating::delete_fraud
+
+applications:
+    cms:
+        methods:
+            ajaxrating_install_templates: AjaxRating::install_templates
+
+callbacks:
+    MT::Entry::pre_remove:    AjaxRating::entry_delete_handler
+    MT::Comment::pre_remove:  AjaxRating::comment_delete_handler
+    MT::TBPing::pre_remove:   AjaxRating::trackback_delete_handler
+    MT::Category::pre_remove: AjaxRating::category_delete_handler
+    MT::Blog::pre_remove:     AjaxRating::blog_delete_handler
+    MT::Author::pre_remove:   AjaxRating::author_delete_handler
+    MT::Tag::pre_remove:      AjaxRating::tag_delete_handler
+    MT::Entry::post_save:     AjaxRating::entry_post_save
+    MT::Comment::post_save:   AjaxRating::comment_post_save
+    MT::TBPing::post_save:    AjaxRating::tbping_post_save
+
+tags:
+    function:
+       AjaxRating:                     AjaxRating::ajax_rating
+       AjaxRatingAverageScore:         AjaxRating::ajax_rating_avg_score
+       AjaxRatingAvgScore:             AjaxRating::ajax_rating_avg_score
+       AjaxRatingTotalScore:           AjaxRating::ajax_rating_total_score
+       AjaxRatingVoteCount:            AjaxRating::ajax_rating_vote_count
+       AjaxRater:                      AjaxRating::rater
+       AjaxStarRater:                  AjaxRating::star_rater
+       AjaxThumbRater:                 AjaxRating::thumb_rater
+       AjaxRaterOnclickJS:             AjaxRating::rater_onclick_js
+       AjaxRatingEntryMax:             AjaxRating::entry_max
+       AjaxRatingCommentMax:           AjaxRating::comment_max
+       AjaxStarRaterWidth:             AjaxRating::star_rater_width
+       AjaxStarRaterAverageScoreWidth: AjaxRating::star_rater_avg_score_width
+       AjaxStarUnitWidth:              AjaxRating::star_unit_width
+       AjaxRatingDefaultThreshold:     AjaxRating::default_threshold
+       AjaxRatingRefreshHot:           AjaxRating::refresh_hot
+       AjaxRatingUserVoteCount:        AjaxRating::ajax_rating_user_vote_count
+    block:
+       'IfAjaxRatingBelowThreshold?': AjaxRating::below_threshold
+       AjaxRatingList:                AjaxRating::listing
+       AjaxRatingEntries:             AjaxRating::listing_entries
+       AjaxRatingComments:            AjaxRating::listing_comments
+       AjaxRatingPings:               AjaxRating::listing_pings
+       AjaxRatingBlogs:               AjaxRating::listing_blogs
+       AjaxRatingCategories:          AjaxRating::listing_categories
+       AjaxRatingTags:                AjaxRating::listing_tags
+       AjaxRatingAuthors:             AjaxRating::listing_authors
+       AjaxRatingUserVotes:           AjaxRating::listing_user_votes
+       AjaxRatingVoteDistribution:    AjaxRating::listing_vote_distribution
+
+upgrade_functions:
+    add_vote_distribution:
+        version_limit: 3
+        priority: 1
+        updater:
+            type:  ajaxrating_votesummary
+            label: 'Ajax Ratings Pro: Calculating vote distributions.'
+            code:  $AjaxRating::AjaxRating::upgrade_add_vote_distribution
+    # Doesn't ever access plugindata?
+    # migrate_plugin_data:
+    #     version_limit: 4
+    #     priority: 1
+    #     updater:
+    #         type: plugindata
+    #         label: 'Ajax Rating Pro: Upgrading plugin data.'
+    #         code: $AjaxRating::AjaxRating::upgrade_migrate_plugin_data
