@@ -48,11 +48,13 @@ object_types:
 tasks:
     refresh_hotobjects:
         name:      'Refresh Hot Objects'
-        frequency: 3600   # run every hour
+        # run every hour
+        frequency: 3600
         code:      AjaxRating::refresh_hot
     delete_fraud_votes:
         name:      'Delete Fraud Votes'
-        frequency: 3600   # run every hour
+        # run every hour
+        frequency: 3600
         code:      AjaxRating::delete_fraud
 
 applications:
