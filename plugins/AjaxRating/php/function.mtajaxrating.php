@@ -15,7 +15,7 @@ function smarty_function_MTAjaxRating($args, &$ctx) {
     if ($obj[$show]) {
         $rating = $object[$show];
     } else {
-        $rating = $ctx->mt->db->get_var("SELECT ajaxrating_votesummary_".$show." FROM mt_ajaxrating_votesummary WHERE ajaxrating_votesummary_obj_id='".$object[$obj_type.'_id']."' AND ajaxrating_votesummary_obj_type='".$obj_type."'");
+        $rating = $ctx->mt->db->get_var("SELECT ar_votesummary_".$show." FROM mt_ar_votesummary WHERE ar_votesummary_obj_id='".$object[$obj_type.'_id']."' AND ar_votesummary_obj_type='".$obj_type."'");
     }
     if (!$rating) {
         return 0;

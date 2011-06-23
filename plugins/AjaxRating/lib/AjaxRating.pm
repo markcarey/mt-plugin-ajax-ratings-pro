@@ -226,7 +226,7 @@ sub _create_vote_distribution_data {
 
     # Use the Vote Summary object to load the vote data for this object id 
     # and type.
-    my $iter = MT->model('ajaxrating_vote')->load_iter({
+    my $iter = MT->model('ar_vote')->load_iter({
         obj_id => $votesummary->obj_id,
         obj_type => $votesummary->obj_type,
     });
@@ -312,7 +312,7 @@ sub ajax_rating_user_vote_count {
     return $ctx->error("Need author context for AjaxRatingUserVoteCount") 
         if !$author;
     my $obj_type = $args->{obj_type} || 'entry';
-    my $count = MT->model('ajaxrating_vote')->count({ voter_id => $author->id, obj_type => $obj_type });
+    my $count = MT->model('ar_vote')->count({ voter_id => $author->id, obj_type => $obj_type });
     return $count;
 }
 
@@ -334,7 +334,7 @@ sub listing_user_votes {
     my $sort_by = $args->{sort_by} || 'authored_on';
     my $direction = $args->{direction} || 'descend';
     my $offset = $args->{offset} || 0;
-    my @votes = MT->model('ajaxrating_vote')->load({ voter_id => $author->id, obj_type => $obj_type }, { limit => $lastn, offset => $offset, sort => 'created_on', direction => $direction });
+    my @votes = MT->model('ar_vote')->load({ voter_id => $author->id, obj_type => $obj_type }, { limit => $lastn, offset => $offset, sort => 'created_on', direction => $direction });
     return '' unless @votes;
     my @obj_ids;
     foreach my $vote (@votes) {
