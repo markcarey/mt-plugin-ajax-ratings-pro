@@ -6,10 +6,72 @@ doc_link:    http://mt-hacks.com/ajaxrating.html
 plugin_link: http://mt-hacks.com/ajaxrating.html
 author_name: 'Mark Carey'
 author_link: http://mt-hacks.com/
+version:     1.3
 schema_version: 3
-version: 1.3
+
+object_types:
+    ar_vote:      AjaxRating::Vote
+    ar_votesumm:  AjaxRating::VoteSummary
+    ar_hotobj:    AjaxRating::HotObject
+
+
+upgrade_functions:
+    add_vote_distribution:
+        version_limit: 3
+        priority: 1
+        updater:
+            type:  ar_votesumm
+            label: 'Ajax Ratings Pro: Calculating vote distributions.'
+            code:  $AjaxRating::AjaxRating::upgrade_add_vote_distribution
+    migrate_plugin_data:
+        version_limit: 3
+        priority: 1
+        updater:
+            type:  plugindata
+            label: 'Ajax Rating Pro: Upgrading plugin data.'
+            code:  $AjaxRating::AjaxRating::upgrade_migrate_plugin_data
+    abbrev_tables:
+        version_limit: 3
+        priority: 5
+        code: $AjaxRating::AjaxRating::Upgrade::AbbrevTables::run
+
+
+callbacks:
+    MT::Entry::pre_remove:    AjaxRating::entry_delete_handler
+    MT::Comment::pre_remove:  AjaxRating::comment_delete_handler
+    MT::TBPing::pre_remove:   AjaxRating::trackback_delete_handler
+    MT::Category::pre_remove: AjaxRating::category_delete_handler
+    MT::Blog::pre_remove:     AjaxRating::blog_delete_handler
+    MT::Author::pre_remove:   AjaxRating::author_delete_handler
+    MT::Tag::pre_remove:      AjaxRating::tag_delete_handler
+    MT::Entry::post_save:     AjaxRating::entry_post_save
+    MT::Comment::post_save:   AjaxRating::comment_post_save
+    MT::TBPing::post_save:    AjaxRating::tbping_post_save
+
+
+applications:
+    cms:
+        methods:
+            ajaxrating_install_templates: AjaxRating::install_templates
+            ar_table_migration: AjaxRating::Upgrade::AbbrevTables::run
+
+
+tasks:
+    refresh_hotobjects:
+        name:      'Refresh Hot Objects'
+        # run every hour
+        frequency: 3600
+        code:      AjaxRating::refresh_hot
+    delete_fraud_votes:
+        name:      'Delete Fraud Votes'
+        # run every hour
+        frequency: 3600
+        code:      AjaxRating::delete_fraud
+
+
 blog_config_template:
     code: AjaxRating::template
+
 system_config_template:
     code: AjaxRating::system_template
 
@@ -39,41 +101,6 @@ settings:
     enable_ip_checking:
         default: 1
         scope: system
-
-object_types:
-    ar_vote:      AjaxRating::Vote
-    ar_votesumm:  AjaxRating::VoteSummary
-    ar_hotobj: AjaxRating::HotObject
-
-tasks:
-    refresh_hotobjects:
-        name:      'Refresh Hot Objects'
-        # run every hour
-        frequency: 3600
-        code:      AjaxRating::refresh_hot
-    delete_fraud_votes:
-        name:      'Delete Fraud Votes'
-        # run every hour
-        frequency: 3600
-        code:      AjaxRating::delete_fraud
-
-applications:
-    cms:
-        methods:
-            ajaxrating_install_templates: AjaxRating::install_templates
-            ar_table_migration: AjaxRating::Upgrade::AbbrevTables::run
-
-callbacks:
-    MT::Entry::pre_remove:    AjaxRating::entry_delete_handler
-    MT::Comment::pre_remove:  AjaxRating::comment_delete_handler
-    MT::TBPing::pre_remove:   AjaxRating::trackback_delete_handler
-    MT::Category::pre_remove: AjaxRating::category_delete_handler
-    MT::Blog::pre_remove:     AjaxRating::blog_delete_handler
-    MT::Author::pre_remove:   AjaxRating::author_delete_handler
-    MT::Tag::pre_remove:      AjaxRating::tag_delete_handler
-    MT::Entry::post_save:     AjaxRating::entry_post_save
-    MT::Comment::post_save:   AjaxRating::comment_post_save
-    MT::TBPing::post_save:    AjaxRating::tbping_post_save
 
 tags:
     function:
@@ -106,23 +133,3 @@ tags:
        AjaxRatingAuthors:             AjaxRating::listing_authors
        AjaxRatingUserVotes:           AjaxRating::listing_user_votes
        AjaxRatingVoteDistribution:    AjaxRating::listing_vote_distribution
-
-upgrade_functions:
-    add_vote_distribution:
-        version_limit: 3
-        priority: 1
-        updater:
-            type:  ar_votesumm
-            label: 'Ajax Ratings Pro: Calculating vote distributions.'
-            code:  $AjaxRating::AjaxRating::upgrade_add_vote_distribution
-    migrate_plugin_data:
-        version_limit: 3
-        priority: 1
-        updater:
-            type:  plugindata
-            label: 'Ajax Rating Pro: Upgrading plugin data.'
-            code:  $AjaxRating::AjaxRating::upgrade_migrate_plugin_data
-    abbrev_tables:
-        version_limit: 3
-        priority: 5
-        code: $AjaxRating::AjaxRating::Upgrade::AbbrevTables::run
