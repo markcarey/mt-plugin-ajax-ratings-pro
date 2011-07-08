@@ -14,7 +14,7 @@ function smarty_block_MTIfAjaxRatingBelowThreshold($args, $content, &$ctx, &$rep
             $show = 'total_score';
             $obj_type = 'commentratingsturnedoff';
         }
-        $rating = $ctx->mt->db->get_var("SELECT ar_votesummary_".$show." FROM mt_ar_votesummary WHERE ar_votesummary_obj_id='".$object[$obj_type.'_id']."' AND ar_votesummary_obj_type='".$obj_type."'");
+        $rating = $ctx->mt->db->get_var("SELECT ar_votesumm_".$show." FROM mt_ar_votesumm WHERE ar_votesumm_obj_id='".$object[$obj_type.'_id']."' AND ar_votesumm_obj_type='".$obj_type."'");
         if (!$rating) {
             $rating = 999999999;
         }

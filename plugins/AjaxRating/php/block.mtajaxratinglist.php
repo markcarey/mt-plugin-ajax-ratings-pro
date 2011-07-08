@@ -20,11 +20,11 @@ function smarty_block_MTAjaxRatingList($args, $content, &$ctx, &$repeat) {
         $args['blog_id'] = $ctx->stash('blog_id');
 
         // ENTRY SELECTION LOGIC
-            $_fp = 'ar_votesummary_';
-            $table = 'mt_ar_votesummary';
+            $_fp = 'ar_votesumm_';
+            $table = 'mt_ar_votesumm';
             if ($args['hot']) { 
-                $_fp = 'ar_hotobject_';
-                $table = 'mt_ar_hotobject';
+                $_fp = 'ar_hotobj_';
+                $table = 'mt_ar_hotobj';
             }
             // Choose a field
             $pop_sort_by = $_fp . 'total_score';
