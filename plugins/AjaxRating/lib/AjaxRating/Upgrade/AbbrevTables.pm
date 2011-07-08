@@ -93,10 +93,6 @@ sub run {
             or return $app->error( 'Legacy data migration failed: '
                                     .$class->errstr )
 
-        # If migrate_data returns '0', as in "no data to move," we can just
-        # skip over this object.
-        next unless $migrated;
-
         # Safety check for remaining records
         if ( my $leftovers = $class->count() ) {
             $app->progress(sprintf(
