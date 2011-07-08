@@ -87,14 +87,17 @@ sub run {
         my $props = MT::Object::LegacyFactory->init_class(
             $class, $legacy_props->{$class}
         );
-        $logger->info("Legacy object for $class created.");
-        # The following always evals to 0...
-        $logger->info("Found migrate_data? ".eval{$class->migrate_data()});
-        # Migrate the data from legacy table to new table
-        my $migrated = $class->migrate_data()
-            or return $app->error( $class->errstr );
 
-        $logger->info('Migrated data.');
+        # Migrate the data from legacy table to new table
+        my $migrated = $class->migrate_data();
+
+        # If migrate_data returns '0', as in "no data to move," we can just 
+        # skip over this object.
+        next if $migrated == 0;
+
+        # If migrate_data ran into trouble, report it.
+        return $app->error( 'Legacy data migration failed: '.$class->errstr )
+            if $class->errstr;
 
         # Safety check for remaining records
         if ( my $leftovers = $class->count() ) {
