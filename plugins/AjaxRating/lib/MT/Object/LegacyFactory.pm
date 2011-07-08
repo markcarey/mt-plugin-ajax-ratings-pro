@@ -124,12 +124,16 @@ class' C<init_class> method.
 =cut
 sub migrate_data {
     my $pkg     = shift;
-    my $cnt     = $pkg->count() or return 0;
     my $new_pkg = shift || $pkg->properties->{replaced_by_class}
         or return $pkg->error('No replaced_by_class specified for '.$pkg);
     ###l4p $logger ||= MT::Log::Log4perl->new(); $logger->trace();
 
-    ###l4p $logger->info( "Updating $pkg to $new_pkg. Count of objects: ".$pkg->count() );
+    defined( my $cnt = $pkg->count() )
+        or return $pkg->error('Could not retrieve count of $pkg objects: '
+                                .($pkg->errstr||'Unknown error'));
+    return $cnt unless $cnt;
+
+    ###l4p $logger->info( "Updating $pkg to $new_pkg. Count of objects: ".$cnt );
 
     my $migrated = 0;
 
