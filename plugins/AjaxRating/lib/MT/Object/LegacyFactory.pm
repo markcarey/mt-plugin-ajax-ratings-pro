@@ -129,13 +129,21 @@ sub migrate_data {
         or return $pkg->error('No replaced_by_class specified for '.$pkg);
     ###l4p $logger ||= MT::Log::Log4perl->new(); $logger->trace();
 
+    ###l4p $logger->info( "Updating $pkg to $new_pkg. Count of objects: ".$pkg->count() );
+
     # Iterate over each record in legacy table
     # and save cloned record to new table
-    my $iter = $pkg->load_iter();
-    while ( my $obj = $iter->() ) {
+    #my $iter = $pkg->load_iter();
+    #while ( my $obj = $iter->() ) {
+    my @objs = $pkg->load();
+    foreach my $obj (@objs) {
+
+        use Data::Dumper;
+        ###l4p $logger->info("Cloning the object: " .Dumper($obj) );
 
         # Clone the object as the new class and save
         my $new = $obj->clone_as( $new_pkg );
+
         $new->save or return $pkg->error( sprintf(
             "Failed saving %s clone of %s object ID %d: %s", 
                 $new_pkg, $pkg, $obj->id, $new->errstr
