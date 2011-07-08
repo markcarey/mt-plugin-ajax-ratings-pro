@@ -10,16 +10,16 @@ version:     1.3.1
 schema_version: 3
 
 object_types:
-    ar_vote:      AjaxRating::Vote
-    ar_votesumm:  AjaxRating::VoteSummary
-    ar_hotobj:    AjaxRating::HotObject
+    # ar_vote:      AjaxRating::Vote
+    # ar_votesumm:  AjaxRating::VoteSummary
+    # ar_hotobj:    AjaxRating::HotObject
     # The above should be changed back to the following
     # and you should continue to refer to these models
     # with their longer names.  The shorter datasource
     # in the class should handle the database...
-    # ajaxrating_vote:        AjaxRating::Vote
-    # ajaxrating_votesummary: AjaxRating::VoteSummary
-    # ajaxrating_hotobject:   AjaxRating::HotObject
+    ajaxrating_vote:        AjaxRating::Vote
+    ajaxrating_votesummary: AjaxRating::VoteSummary
+    ajaxrating_hotobject:   AjaxRating::HotObject
 
 
 upgrade_functions:
