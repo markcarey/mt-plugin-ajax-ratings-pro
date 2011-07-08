@@ -3,6 +3,7 @@
 package AjaxRating::ReportComment;
 
 use strict;
+use warnings;
 use MT::App;
 @AjaxRating::ReportComment::ISA = qw( MT::App );
 

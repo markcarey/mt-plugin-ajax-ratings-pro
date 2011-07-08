@@ -3,6 +3,7 @@
 package AjaxRating::AddVote;
 
 use strict;
+use warnings;
 use MT::App;
 use AjaxRating::Vote;
 use AjaxRating::VoteSummary;

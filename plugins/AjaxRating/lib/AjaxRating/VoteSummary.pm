@@ -1,5 +1,6 @@
 package AjaxRating::VoteSummary;
 use strict;
+use warnings;
 
 use MT::Object;
 @AjaxRating::VoteSummary::ISA = qw(MT::Object);

@@ -1,5 +1,6 @@
 package AjaxRating::HotObject;
 use strict;
+use warnings;
 
 use MT::Object;
 @AjaxRating::HotObject::ISA = qw(MT::Object);
