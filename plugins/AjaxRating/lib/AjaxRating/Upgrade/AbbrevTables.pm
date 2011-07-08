@@ -89,15 +89,13 @@ sub run {
         );
 
         # Migrate the data from legacy table to new table
-        my $migrated = $class->migrate_data();
+        defined( my $migrated = $class->migrate_data() )
+            or return $app->error( 'Legacy data migration failed: '
+                                    .$class->errstr )
 
-        # If migrate_data returns '0', as in "no data to move," we can just 
+        # If migrate_data returns '0', as in "no data to move," we can just
         # skip over this object.
-        next if $migrated == 0;
-
-        # If migrate_data ran into trouble, report it.
-        return $app->error( 'Legacy data migration failed: '.$class->errstr )
-            if $class->errstr;
+        next unless $migrated;
 
         # Safety check for remaining records
         if ( my $leftovers = $class->count() ) {
