@@ -133,10 +133,12 @@ sub migrate_data {
 
     # Iterate over each record in legacy table
     # and save cloned record to new table
-    #my $iter = $pkg->load_iter();
-    #while ( my $obj = $iter->() ) {
-    my @objs = $pkg->load();
-    foreach my $obj (@objs) {
+    my $iter = $pkg->load_iter()
+        or return $pkg->error("Could not get object iterator for $pkg: "
+                                .($pkg->errstr||'Unknown error'));
+    while ( my $obj = $iter->() ) {
+    # my @objs = $pkg->load();
+    # foreach my $obj (@objs) {
 
         use Data::Dumper;
         ###l4p $logger->info("Cloning the object: " .Dumper($obj) );
