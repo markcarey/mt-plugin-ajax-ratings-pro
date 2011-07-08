@@ -131,6 +131,8 @@ sub migrate_data {
 
     ###l4p $logger->info( "Updating $pkg to $new_pkg. Count of objects: ".$pkg->count() );
 
+    my $migrated = 0;
+
     # Iterate over each record in legacy table
     # and save cloned record to new table
     my $iter = $pkg->load_iter()
@@ -156,8 +158,10 @@ sub migrate_data {
 
         ###l4p $logger->debug(sprintf('Saved %s object to new table %s',
         ###l4p                        $pkg, $new_pkg->table_name));
+
+        $migrated++;
     }
-    return $cnt;
+    return $migrated;
 }
 
 =head2 $obj->clone_as( $new_class )
