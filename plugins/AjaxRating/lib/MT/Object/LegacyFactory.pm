@@ -140,8 +140,7 @@ sub migrate_data {
     # my @objs = $pkg->load();
     # foreach my $obj (@objs) {
 
-        use Data::Dumper;
-        ###l4p $logger->info("Cloning the object: " .Dumper($obj) );
+        ###l4p $logger->info("Cloning the object: ", l4mtdump($obj) );
 
         # Clone the object as the new class and save
         my $new = $obj->clone_as( $new_pkg );
