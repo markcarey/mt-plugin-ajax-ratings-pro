@@ -27,7 +27,7 @@ upgrade_functions:
         version_limit: 3
         priority: 1
         updater:
-            type:  ar_votesumm
+            type:  ajaxrating_votesummary
             label: 'Ajax Ratings Pro: Calculating vote distributions.'
             code:  $AjaxRating::AjaxRating::upgrade_add_vote_distribution
     migrate_plugin_data:
