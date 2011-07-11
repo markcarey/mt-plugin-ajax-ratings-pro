@@ -23,24 +23,24 @@ object_types:
 
 
 upgrade_functions:
-    add_vote_distribution:
+    ar_abbrev_tables:
         version_limit: 3
         priority: 1
+        code: $AjaxRating::AjaxRating::Upgrade::AbbrevTables::run
+    ar_add_vote_distribution:
+        version_limit: 3
+        priority: 5
         updater:
             type:  ajaxrating_votesummary
             label: 'Ajax Ratings Pro: Calculating vote distributions.'
             code:  $AjaxRating::AjaxRating::upgrade_add_vote_distribution
-    migrate_plugin_data:
+    ar_migrate_plugin_data:
         version_limit: 3
-        priority: 1
+        priority: 6
         updater:
             type:  plugindata
             label: 'Ajax Rating Pro: Upgrading plugin data.'
             code:  $AjaxRating::AjaxRating::upgrade_migrate_plugin_data
-    abbrev_tables:
-        version_limit: 3
-        priority: 5
-        code: $AjaxRating::AjaxRating::Upgrade::AbbrevTables::run
 
 
 callbacks:
@@ -60,7 +60,6 @@ applications:
     cms:
         methods:
             ajaxrating_install_templates: AjaxRating::install_templates
-            ar_table_migration: AjaxRating::Upgrade::AbbrevTables::run
 
 
 tasks:
