@@ -91,7 +91,7 @@ sub run {
         # Migrate the data from legacy table to new table
         defined( my $migrated = $class->migrate_data() )
             or return $app->error( 'Legacy data migration failed: '
-                                    .$class->errstr )
+                                    .$class->errstr );
 
         # Safety check for remaining records
         if ( my $leftovers = $class->count() ) {
