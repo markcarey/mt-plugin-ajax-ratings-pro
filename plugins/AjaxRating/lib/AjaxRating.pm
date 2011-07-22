@@ -841,7 +841,7 @@ sub template {
     my $app = MT->instance;
     my $blog_id = $app->{query}->param('blog_id');
     my $tmpl;
-    MT->log($plugin->id);
+
     rebuild_ar_templates($app);
     
     # If the Template Installer plugin is installed, show the "Install 
