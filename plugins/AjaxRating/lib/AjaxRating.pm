@@ -414,7 +414,7 @@ sub rater {
 HTML
         for(my $star=1;$star<=$units;$star++) {
             $html .= <<HTML;
-        <li><a href="#" title="$star out of $units" class="r$star-unit rater" onclick="pushRating('$obj_type',$obj_id,$star,$blog_id,$total_score,$vote_count,$author_id); return(false);">$star</a></li>
+        <li><a title="$star out of $units" href="#" class="r$star-unit rater" onclick="pushRating('$obj_type',$obj_id,$star,$blog_id,$total_score,$vote_count,$author_id); return(false);">$star</a></li>
 HTML
         }
         $html .= <<HTML;
