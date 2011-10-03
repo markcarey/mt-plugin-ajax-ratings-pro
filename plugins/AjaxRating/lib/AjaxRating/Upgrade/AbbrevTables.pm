@@ -94,11 +94,13 @@ sub run {
                                     .$class->errstr );
 
         # Safety check for remaining records
-        if ( my $leftovers = $class->count() ) {
+        my $new_class = $legacy_props->{$class}->{replaced_by_class};
+        if ( $class->count() < $new_class->count() ) {
+            my $leftovers = $class->count();
             $app->progress(sprintf(
-                  '%d %s records were not fully migrated and will be left '
+                '%d %s records were not fully migrated and will be left '
                 . 'in %s for manual inspection and/or processing',
-                    $leftovers, $class, $class->table_name
+                $leftovers, $class, $class->table_name
             ), 1);
             next;
         }
