@@ -33,7 +33,7 @@ sub run {
         
         # Remove the old plugin's schema version from the config object so
         # that we don't try to upgrade again.
-        #delete $cfg->pluginschemaversion->{'AjaxRating/AjaxRating.pl'};
+        delete $cfg->pluginschemaversion->{'AjaxRating/AjaxRating.pl'};
     }
 }
 
