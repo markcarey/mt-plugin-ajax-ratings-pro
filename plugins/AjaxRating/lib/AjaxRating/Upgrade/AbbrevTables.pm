@@ -104,7 +104,7 @@ sub run {
         }
 
         # Remove the data table
-        $class->remove_datasource or return $app->error( $class->errstr );
+        #$class->remove_datasource or return $app->error( $class->errstr );
 
         $app->progress(sprintf( '%d %s records migrated',
                                 $migrated, $props->{datasource}));

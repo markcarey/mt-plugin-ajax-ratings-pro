@@ -157,8 +157,8 @@ sub migrate_data {
         ));
 
         # Remove old object
-        $obj->remove or return $pkg->error(
-            'Failed removing legacy object:'.$obj->errstr );
+        #$obj->remove or return $pkg->error(
+        #    'Failed removing legacy object:'.$obj->errstr );
 
         ###l4p $logger->debug(sprintf('Saved %s object to new table %s',
         ###l4p                        $pkg, $new_pkg->table_name));
