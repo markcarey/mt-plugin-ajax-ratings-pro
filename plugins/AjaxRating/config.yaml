@@ -128,7 +128,7 @@ tags:
        AjaxRatingRefreshHot:           AjaxRating::refresh_hot
        AjaxRatingUserVoteCount:        AjaxRating::ajax_rating_user_vote_count
     block:
-       'IfAjaxRatingBelowThreshold?': AjaxRating::below_threshold
+       IfAjaxRatingBelowThreshold?: AjaxRating::below_threshold
        AjaxRatingList:                AjaxRating::listing
        AjaxRatingEntries:             AjaxRating::listing_entries
        AjaxRatingComments:            AjaxRating::listing_comments
