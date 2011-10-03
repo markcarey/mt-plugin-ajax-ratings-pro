@@ -109,6 +109,9 @@ sub init_class {
     $props->{get_driver} ||= undef;     # Reset this to get legacy driver
     $props = { %$superprops_copy, %$props };
 
+    # DW: I think that using install_properties here should cause the new
+    # datasource properties to be applied to the old datasource. Wouldn't that
+    # mean that the old table would be upgraded with a new column, for example?
     $class->install_properties( $props );
     $class->properties();
 }
