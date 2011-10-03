@@ -22,6 +22,8 @@ object_types:
     ajaxrating_hotobject:   AjaxRating::HotObject
 
 
+init_app: AjaxRating::Upgrade::PLtoYAML::run
+
 upgrade_functions:
     ar_abbrev_tables:
         version_limit: 3
