@@ -7,16 +7,22 @@ documents additions made since version 1.261.
 
 # Upgrading
 
-Version 1.3 is converted to a `config.yaml` style plugin. Be sure to remove
-the old `AjaxRating.pl` file when upgrading. Also note that plugin data is
-stored differently, so you will need to re-set Ajax Rating Plugin Settings, at
-both the System and Blog level.
+Version 1.3+ is converted to a `config.yaml` style plugin. Be sure to remove
+the old `AjaxRating.pl` file when upgrading.
+
+The upgrade process itself may not go smoothly with this change. You should
+expect to see an upgrade notice from MT twice: once to install the
+`config.yaml` style plugin, and a second time to migrate and update data.
 
 Version 1.3 also changes its table names, shortening them for compatibility
-with Oracle. The upgrade routine should handle this without any special
-intervention from an administrator, nor does it require any changes to your
-templates -- it's mentioned here simply because it is a significant change to
-the plugin.
+with Oracle. This change won't require any modification to your templates. The
+change does require you to work with the database: the old table
+`mt_ajaxrating_votesummary` will need a new column created:
+`ajaxrating_votesummary_vote_dist` as type `text`. This must be done before
+the new plugin is installed.
+
+Plugin data is stored differently with the `config.yaml` style, so you will
+need to re-set Ajax Rating Plugin Settings, at both the System and Blog level.
 
 # Configuration
 
