@@ -17,6 +17,7 @@ sub init {
     $app->SUPER::init(@_) or return;
     $app->add_methods(
         vote => \&vote,
+        unvote => \&unvote
     );
     $app->{default_mode} = 'vote';
     $app->{charset} = $app->{cfg}->PublishCharset;
@@ -151,6 +152,72 @@ sub vote {
             . "||" . $q->param('r') . "||" . $votesummary->total_score . "||" 
             . $votesummary->vote_count;
     }
+}
+
+# remove rating/vote
+sub unvote {
+	my $app = shift;
+    my $q = $app->{query};
+    return "ERR||Invalid request, must use POST."
+        if $app->request_method() ne 'POST';
+	use MT::Plugin;
+	my $plugin = MT::Plugin::AjaxRating->instance;
+	my $config = $plugin->get_config_hash('blog:'.$q->param('blog_id'));
+	my $obj_type = $q->param('obj_type');
+	return "ERR||Invalid object type."
+		if ($config->{ratingl} && ($obj_type ne 'entry') && ($obj_type ne 'blog'));
+
+    my ($session, $voter) = $app->get_commenter_session;
+    return "ERR||Not logged in."
+		if (!$voter);
+		
+	my $vote = AjaxRating::Vote->load({ voter_id => $voter->id, obj_type => $q->param('obj_type'), obj_id => $q->param('obj_id') });
+
+	if (!$vote) {
+		return "ERR||Not found";
+	} else {
+		$vote->remove;
+
+		my $votesummary = AjaxRating::VoteSummary->load({ obj_type => $vote->obj_type, obj_id => $vote->obj_id });
+		if ($votesummary) {
+    		$votesummary->vote_count($votesummary->vote_count - 1);
+    		$votesummary->total_score($votesummary->total_score - $vote->score);
+    		$votesummary->avg_score(sprintf("%.1f",$votesummary->total_score / $votesummary->vote_count));	
+    		$votesummary->save;	
+    	}
+		if ($config->{rebuild}) {
+	  		MT::Util::start_background_task(sub {
+				my $entry;
+				use MT::Entry;
+				if (($obj_type eq 'entry') || ($obj_type eq 'page') || ($obj_type eq 'topic')) {
+					$entry = MT::Entry->load($vote->obj_id);
+				} elsif ($obj_type eq 'comment') {
+					use MT::Comment;
+					my $comment = MT::Comment->load($vote->obj_id);
+					$entry = $comment->entry;
+				} elsif ($obj_type eq 'ping') {
+					use MT::TBPing;
+					my $ping = MT::TBPing->load($vote->obj_id);
+					$entry = $ping->entry;
+				}
+				if ($entry && $config->{rebuild} eq "1") {
+					$app->publisher->_rebuild_entry_archive_type( Entry => $entry, ArchiveType => 'Individual');
+				} elsif (($obj_type eq "category") && $config->{rebuild} eq "1") {
+					use MT::Category;
+					my $category = MT::Category->load($vote->obj_id);
+					$app->publisher->_rebuild_entry_archive_type( Category => $category, ArchiveType => 'Category');
+				} elsif ($entry && $config->{rebuild} eq "2") {
+					$app->rebuild_entry( Entry => $entry);
+					$app->rebuild_indexes( BlogID => $q->param('blog_id'));
+				} elsif ($config->{rebuild} eq "3") {
+					$app->rebuild_indexes( BlogID => $q->param('blog_id'));
+				}
+  			});  ### end of background task
+		}
+		return "OK||".$votesummary->obj_type."||".$votesummary->obj_id."||".$q->param('r')."||".$votesummary->total_score."||".$votesummary->vote_count;
+	
+	} 
+
 }
 
 1;
