@@ -160,8 +160,7 @@ sub unvote {
     my $q = $app->{query};
     return "ERR||Invalid request, must use POST."
         if $app->request_method() ne 'POST';
-	use MT::Plugin;
-	my $plugin = MT::Plugin::AjaxRating->instance;
+	my $plugin = MT->component('ajaxrating');
 	my $config = $plugin->get_config_hash('blog:'.$q->param('blog_id'));
 	my $obj_type = $q->param('obj_type');
 	return "ERR||Invalid object type."

@@ -654,6 +654,88 @@ sub delete_fraud {
     return '';
 }
 
+sub migrate_community_votes {
+    my $start_migrate = time;
+    my $plugin = MT->component('ajaxrating');
+    my $config = $plugin->get_config_hash('system');
+    if ($config->{migrate}) {
+        my $count = 0;
+        my $iter = MT->model('objectscore')->load_iter({namespace => 'community_pack_recommend'});
+        while ( my $fav = $iter->() ) {
+            my $vote = AjaxRating::Vote->load({
+                voter_id => $fav->author_id,
+                obj_type => $fav->object_ds,
+                obj_id => $fav->object_id,
+            });
+            if (!$vote) {
+                $vote = AjaxRating::Vote->new;
+                $vote->voter_id($fav->author_id);
+                $vote->obj_type($fav->object_ds);
+                $vote->obj_id($fav->object_id);
+                $vote->score($fav->score);
+                $vote->ip($fav->ip);
+                my $obj = MT->model($fav->object_ds)->load($fav->object_id);
+                if ($obj && $obj->can('blog_id')) {
+                    $vote->blog_id($obj->blog_id);
+                }
+                $vote->created_on($fav->created_on);
+                $vote->modified_on($fav->modified_on);
+                $vote->save;
+                
+                # Update the Vote Summary. The summary is used because it will let 
+                # publishing happen faster (loading one summary row to publish results
+                # is faster than loading many AjaxRating::Vote records).
+                my $votesummary = AjaxRating::VoteSummary->load({
+                    obj_type => $vote->obj_type,
+                    obj_id   => $vote->obj_id,
+                });
+
+                # If no VoteSummary was found for this object, create one and populate 
+                # it with "getting started" values.
+                if (!$votesummary) {
+                    $votesummary = AjaxRating::VoteSummary->new;
+                    $votesummary->obj_type($vote->obj_type);
+                    $votesummary->obj_id($vote->obj_id);
+                    $votesummary->blog_id($vote->blog_id);
+                    if ($obj && $obj->can('author_id')) {
+                        $votesummary->author_id($obj->author_id);
+                    }
+                    $votesummary->vote_count(0);
+                    $votesummary->total_score(0);
+                }
+
+                # Update the VoteSummary with details of this vote.
+                $votesummary->vote_count($votesummary->vote_count + 1);
+                $votesummary->total_score($votesummary->total_score + $vote->score);
+                $votesummary->avg_score(
+                    sprintf("%.1f",$votesummary->total_score / $votesummary->vote_count)
+                );
+
+                # Update the voting distribution, which makes it easy to output 
+                # "X Stars has received Y votes"
+                my $yaml = YAML::Tiny->read_string( $votesummary->vote_dist );
+                $yaml = YAML::Tiny->new if !$yaml; # No previously-saved data.
+
+                # Increase the vote tally for this score by 1.
+                $yaml->[0]->{$vote->score} += 1;
+
+                $votesummary->vote_dist( $yaml->write_string() );
+                $votesummary->save or die $votesummary->errstr;
+                $count++;
+            }
+            $plugin->set_config_value('migrate', 0, 'system');
+        }
+        
+        my $migrate_time = time - $start_migrate;
+        MT->log({
+           message => "Ajax Ratings Plugin has migrated " . $count . " Community Pack votes (" . $migrate_time . " seconds)",
+           metadata => $migrate_time,
+           class => 'MT::Log::System'
+        });
+    }
+    return '';
+}
+
 sub entry_delete_handler {
     my ($cb, $object) = @_;
     my $obj_type = 'entry';
@@ -999,6 +1081,14 @@ sub system_template {
     hint="Normally, votes are restricted by IP address: 1 vote for 1 IP address per rated object. In a live environment this is often fine, but during development it makes things a bear. You may also want to disable this feature if ratings are used internally, where all users may have the same IP address."
     show_hint="1">
             <input type="checkbox" name="enable_ip_checking" <mt:If name="enable_ip_checking">checked</mt:If> />
+</mtapp:setting>
+
+<mtapp:setting
+    id="migrate"
+    label="<__trans phrase="Migrate Community Pack Votes">"
+    hint="(Advanced) Check this box to migrate all system wide votes made via the MT Community Pack favoriting system. This will copy those votes and convert them to Ajax Rating votes. Useful if you plan to migrate from using Community Pack to Ajax Rating and you want to keep the pre-existing vote data. Note that the migrate will happen during the next scheduled task run (usually via cron) and once complete, a message will be posted to the System Activity Log and this setting will become unchecked."
+    show_hint="1">
+            <input type="checkbox" name="migrate" <mt:If name="migrate">checked</mt:If> />
 </mtapp:setting>
 MT40
 
