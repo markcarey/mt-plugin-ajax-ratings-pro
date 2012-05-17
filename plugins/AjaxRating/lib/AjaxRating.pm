@@ -317,9 +317,7 @@ sub ajax_rating_user_vote_count {
 }
 
 sub listing_user_votes {
-    my $ctx = shift;
-    my $args = shift;
-    my $cond = shift;
+    my ($ctx, $args, $cond) = @_;
     my $author_id = $args->{author_id} || $args->{voter_id} || $args->{user_id};
     my $author;
     if ($author_id) {
@@ -334,24 +332,64 @@ sub listing_user_votes {
     my $sort_by = $args->{sort_by} || 'authored_on';
     my $direction = $args->{direction} || 'descend';
     my $offset = $args->{offset} || 0;
-    my @votes = MT->model('ajaxrating_vote')->load({ voter_id => $author->id, obj_type => $obj_type }, { limit => $lastn, offset => $offset, sort => 'created_on', direction => $direction });
-    return '' unless @votes;
-    my @obj_ids;
-    foreach my $vote (@votes) {
-        push @obj_ids, $vote->obj_id;
+    my $blog_id = $args->{blog_id};
+    my @votes = MT->model('ajaxrating_vote')->load({ 
+                    voter_id => $author->id, 
+                    obj_type => $obj_type,
+                    ($blog_id ? (blog_id => $blog_id) : ()),
+                     }, {
+                    limit => $lastn, 
+                    offset => $offset, 
+                    sort => 'created_on', 
+                    direction => $direction });
+    if (!@votes) {
+        return MT::Template::Context::_hdlr_pass_tokens_else(@_);
     }
-    my @objects = MT->model($obj_type)->load({ id => \@obj_ids }, { sort => $sort_by, direction => $direction });
-    # support only entries for now
-    foreach my $args_key ('category', 'categories', 'tag', 'tags', 'author', 'id', 'days', 'recently_commented_on', 'include_subcategories') {
-        delete $args->{$args_key};
+    
+    my $old_way = 0;
+    if ($old_way) {
+        my @obj_ids;
+        foreach my $vote (@votes) {
+            push @obj_ids, $vote->obj_id;
+        }
+        my @objects = MT->model($obj_type)->load({ id => \@obj_ids }, { sort => $sort_by, direction => $direction });
+        # support only entries for now
+        foreach my $args_key ('category', 'categories', 'tag', 'tags', 'author', 'id', 'days', 'recently_commented_on', 'include_subcategories', 'offset') {
+            delete $args->{$args_key};
+        }
+        $args->{sort_by} = $sort_by;
+        $args->{direction} = $direction;
+        $args->{lastn} = $lastn;
+        $ctx->stash('entries',\@objects);
+        return MT::Template::Context::_hdlr_entries($ctx, $args, $cond);
+    } else {
+        my $res = '';
+        my $tok = $ctx->stash('tokens');
+        my $builder = $ctx->stash('builder');
+        my $i = 0;
+        my $glue = $args->{glue};
+        my $vars = $ctx->{__stash}{vars} ||= {};
+        foreach my $vote (@votes) {
+            my $e = MT->model($obj_type)->load($vote->obj_id) or next;
+            local $vars->{__first__} = !$i;
+            local $vars->{__last__} = !defined $votes[$i+1];
+            local $vars->{__odd__} = ($i % 2) == 0; # 0-based $i
+            local $vars->{__even__} = ($i % 2) == 1;
+            local $vars->{__counter__} = $i+1;
+            local $ctx->{__stash}{blog} = $e->blog;
+            local $ctx->{__stash}{blog_id} = $e->blog_id;
+            local $ctx->{__stash}{entry} = $e;
+            local $ctx->{current_timestamp} = $e->authored_on;
+            local $ctx->{current_timestamp_end} = $e->authored_on;
+            local $ctx->{modification_timestamp} = $e->modified_on;
+            my $out = $builder->build($ctx, $tok);
+            return $ctx->error( $builder->errstr ) unless defined $out;
+            $res .= $glue if defined $glue && $i && length($res) && length($out);
+            $res .= $out;
+            $i++;
+        }
+        return $res;
     }
-    use Data::Dumper;
-    MT->log("objects is:" . Dumper( scalar @objects));
-    $args->{sort_by} = $sort_by;
-    $args->{direction} = $direction;
-    $args->{lastn} = $lastn;
-    $ctx->stash('entries',\@objects);
-    MT::Template::Context::_hdlr_entries($ctx, $args, $cond);
 }
 
 
@@ -838,6 +876,25 @@ sub tbping_post_save {
             $votesummary->save;
         }
     }
+}
+
+sub session_state {
+    my ($cb, $app, $c, $commenter) = @_;
+    my $q = $app->param if $app->can('param');
+    my $blog_id = $q->param('blog_id') if $q;
+    my @votes = MT->model('ajaxrating_vote')->load({ 
+                    voter_id => $commenter->id, 
+                    obj_type => 'entry',
+                    ($blog_id ? (blog_id => $blog_id) : ()),
+    });
+    my $data = {};
+    foreach my $vote (@votes) {
+        my $obj_id = $vote->obj_id;
+        my $score = $vote->score;
+        $data->{$obj_id} = $score;
+    }
+    $c->{user_votes} = $data if $data;
+    return ($c, $commenter);
 }
 
 sub install_templates {

@@ -6,7 +6,7 @@ doc_link:    http://mt-hacks.com/ajaxrating.html
 plugin_link: http://mt-hacks.com/ajaxrating.html
 author_name: 'Mark Carey'
 author_link: http://mt-hacks.com/
-version:     1.4.0
+version:     1.4.1
 schema_version: 3
 
 object_types:
@@ -56,6 +56,7 @@ callbacks:
     MT::Entry::post_save:     AjaxRating::entry_post_save
     MT::Comment::post_save:   AjaxRating::comment_post_save
     MT::TBPing::post_save:    AjaxRating::tbping_post_save
+    commenter_session_state:  AjaxRating::session_state
 
 
 applications:
@@ -148,3 +149,11 @@ tags:
        AjaxRatingAuthors:             AjaxRating::listing_authors
        AjaxRatingUserVotes:           AjaxRating::listing_user_votes
        AjaxRatingVoteDistribution:    AjaxRating::listing_vote_distribution
+
+socialstats_services:
+  ajaxrating:
+      name: Ajax Rating
+      class: 'SocialStats::Entry::AjaxRating'
+      label_singular: Vote
+      label_plural: Votes
+      verb: Vote

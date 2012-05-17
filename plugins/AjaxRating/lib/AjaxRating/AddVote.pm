@@ -28,15 +28,16 @@ sub init {
 sub vote {
     my $app = shift;
     my $q = $app->{query};
-    return "ERR||Invalid request, must use POST."
-        if $app->request_method() ne 'POST';
+    my $format = $q->param('format') || 'text';
+    return _send_error( $app, $format, "Invalid request, must use POST.")
+        if ($app->request_method() ne 'POST');
 
     # Check that the submitted vote has been set up for this object type on 
     # this blog.
     my $plugin = MT->component('ajaxrating');
     my $config = $plugin->get_config_hash('blog:'.$q->param('blog_id'));
     my $obj_type = $q->param('obj_type');
-    return "ERR||Invalid object type."
+    return _send_error( $app, $format, "Invalid object type.")
         if ($config->{ratingl} && ($obj_type ne 'entry') && ($obj_type ne 'blog'));
 
     # Refuse any vote that has somehow exceeded the maximum number of scoring 
@@ -44,7 +45,7 @@ sub vote {
     my $max_points_setting = $q->param('obj_type') . "_max_points";
     my $max_points = $config->{$max_points_setting} || 10;
     if ($q->param('r') > $max_points) {
-        return "ERR||That vote exceeds the maximum for this item.";
+        return _send_error( $app, $format, "That vote exceeds the maximum for this item.");
     }
 
     # Start the real work: check if the user has already voted on this object. 
@@ -61,12 +62,31 @@ sub vote {
         });
     }
     if ($vote) {
-        return "ERR||You have already voted on this item.";
+        return _send_error( $app, $format, "You have already voted on this item.");
     } else {
 
+        my ($session, $voter) = $app->get_commenter_session;
+        my $sid = $q->param('sid');
+        if (!$voter && $sid) {
+            my $cfg = $app->config;
+            my $sess_obj = MT->model('session')->load({ id => $sid });
+            my $timeout  = $cfg->CommentSessionTimeout;
+            my $user_id  = $sess_obj->get('author_id') if $sess_obj;
+            my $user     = MT->model('author')->load($user_id) if $user_id;
+            $session = $sess_obj if $sess_obj;
+            $voter = $user if $user;
+        }
+        if ($voter) {
+            # check if logged in user already voted via a different IP address
+            $vote = AjaxRating::Vote->load({
+                voter_id       => $voter->id,
+                obj_type => $q->param('obj_type'),
+                obj_id   => $q->param('obj_id'),
+            });
+            return _send_error( $app, $format, "You have already voted on this item.") if $vote;
+        }
         # This user has not previously voted on this object. Record their vote
         # and the score they gave.
-        my ($session, $voter) = $app->get_commenter_session;
         $vote = AjaxRating::Vote->new;
         $vote->ip($app->remote_ip);
         $vote->blog_id($q->param('blog_id'));
@@ -145,12 +165,23 @@ sub vote {
             });  ### end of background task
         }
 
-        # Return a string, which uses "||" as separators. The returned string 
-        # is parsed by javascript -- splitting the "||" to create an array of 
-        # values.
-        return "OK||" . $votesummary->obj_type . "||" . $votesummary->obj_id 
-            . "||" . $q->param('r') . "||" . $votesummary->total_score . "||" 
-            . $votesummary->vote_count;
+        if ($format eq 'json') {
+            return _send_json_response( $app,
+                { status => "OK", 
+                  message => "Vote Successful",
+                  obj_type => $votesummary->obj_type,
+                  obj_id => $votesummary->obj_id,
+                  score => $q->param('r'),
+                  total_score => $votesummary->total_score,
+                  vote_count => $votesummary->vote_count } );
+        } else {
+            # Return a string, which uses "||" as separators. The returned string 
+            # is parsed by javascript -- splitting the "||" to create an array of 
+            # values.
+            return "OK||" . $votesummary->obj_type . "||" . $votesummary->obj_id 
+                . "||" . $q->param('r') . "||" . $votesummary->total_score . "||" 
+                . $votesummary->vote_count;
+        }
     }
 }
 
@@ -158,31 +189,38 @@ sub vote {
 sub unvote {
 	my $app = shift;
     my $q = $app->{query};
-    return "ERR||Invalid request, must use POST."
-        if $app->request_method() ne 'POST';
-	my $plugin = MT->component('ajaxrating');
+    my $format = $q->param('format') || 'text';
+    return _send_error( $app, $format, "Invalid request, must use POST.")
+        if ($app->request_method() ne 'POST');
+    my $plugin = MT->component('ajaxrating');
 	my $config = $plugin->get_config_hash('blog:'.$q->param('blog_id'));
 	my $obj_type = $q->param('obj_type');
-	return "ERR||Invalid object type."
+	return _send_error( $app, $format, "Invalid object type.")
 		if ($config->{ratingl} && ($obj_type ne 'entry') && ($obj_type ne 'blog'));
 
     my ($session, $voter) = $app->get_commenter_session;
-    return "ERR||Not logged in."
+    return _send_error( $app, $format, "Not logged in.")
 		if (!$voter);
 		
 	my $vote = AjaxRating::Vote->load({ voter_id => $voter->id, obj_type => $q->param('obj_type'), obj_id => $q->param('obj_id') });
 
 	if (!$vote) {
-		return "ERR||Not found";
+	    return _send_error( $app, $format, "Not found");
 	} else {
 		$vote->remove;
 
 		my $votesummary = AjaxRating::VoteSummary->load({ obj_type => $vote->obj_type, obj_id => $vote->obj_id });
 		if ($votesummary) {
     		$votesummary->vote_count($votesummary->vote_count - 1);
-    		$votesummary->total_score($votesummary->total_score - $vote->score);
-    		$votesummary->avg_score(sprintf("%.1f",$votesummary->total_score / $votesummary->vote_count));	
-    		$votesummary->save;	
+    		if ($votesummary->vote_count == 0) {
+    		    $votesummary->total_score(0);
+    		    $votesummary->avg_score(0);
+    		    $votesummary->remove;
+    		} else {
+        		$votesummary->total_score($votesummary->total_score - $vote->score);
+        		$votesummary->avg_score(sprintf("%.1f",$votesummary->total_score / $votesummary->vote_count));	
+        		$votesummary->save;	
+        	}	
     	}
 		if ($config->{rebuild}) {
 	  		MT::Util::start_background_task(sub {
@@ -213,10 +251,48 @@ sub unvote {
 				}
   			});  ### end of background task
 		}
-		return "OK||".$votesummary->obj_type."||".$votesummary->obj_id."||".$q->param('r')."||".$votesummary->total_score."||".$votesummary->vote_count;
+		if ($format eq 'json') {
+            return _send_json_response( $app,
+                { status => "OK", 
+                  message => "Vote Successful",
+                  obj_type => $votesummary->obj_type,
+                  obj_id => $votesummary->obj_id,
+                  score => $q->param('r'),
+                  total_score => $votesummary->total_score,
+                  vote_count => $votesummary->vote_count } );
+        } else {
+            # Return a string, which uses "||" as separators. The returned string 
+            # is parsed by javascript -- splitting the "||" to create an array of 
+            # values.
+            return "OK||" . $votesummary->obj_type . "||" . $votesummary->obj_id 
+                . "||" . $q->param('r') . "||" . $votesummary->total_score . "||" 
+                . $votesummary->vote_count;
+        }
 	
 	} 
 
+}
+
+sub _send_error {
+    my ( $app, $format, $msg ) = @_;
+    if ($format eq 'json') {
+        return _send_json_response( $app,
+            { status => "ERR", 
+              message => $msg,
+            } );
+    } else {
+        return "ERR||" . $msg;
+    }
+}
+
+sub _send_json_response {
+    my ( $app, $result ) = @_;
+    require JSON;
+    my $json = JSON::objToJson($result);
+    $app->send_http_header("");
+    $app->print($json);
+    return $app->{no_print_body} = 1;
+    return undef;
 }
 
 1;
