@@ -32,6 +32,14 @@ votes by IP address. Disable during development for easy testing.
 
 # Tag Reference
 
+## AjaxRatingUserVotes
+
+The tag `AjaxRatingUserVotes` is a block tag that outputs a list of
+the recent objects voted on by a specific user. Starting in 1.4.1, the sort 
+order is most-recent vote first -- note that the sorting it based on when the
+vote was made, NOT the date of the object.  This tag is well suited to an
+Author archive or user profile page.
+
 ## AjaxRatingVoteDistribution
 
 The tag `AjaxRatingVoteDistribution` is a block tag that will provide insight
@@ -51,3 +59,28 @@ following example:
 
 As you'll notice, the loop meta variables are also supported, including
 `__first__`, `__last__`, `__odd__`, `__even__`, and `__counter__`.
+
+# (Optional) JSON Output For Voting Script
+
+(Advanced Feature) Staring in version 1.4.1, the voting script (mt-vote.cgi) can send
+its responses in JSON format. To request JSON format responses, POSTs to the voting
+script must include a 'format' parameter set to 'json' (&format=json).
+
+Example responses:
+
+success:
+    {
+        "obj_id": "64246",    # object id of object
+        "status": "OK",       # OK indicates a successful save
+        "vote_count": 29,     # number of votes for this object 
+        "score": "5",         # score for this vote
+        "total_score": 126,   # sum of scores for all votes.
+        "obj_type": "entry",  # type of object, usually 'entry'
+        "message": "Vote Successful"
+    }
+error:
+    {
+        "status": "ERR",
+        "message": "You have already voted on this item."
+    }
+
