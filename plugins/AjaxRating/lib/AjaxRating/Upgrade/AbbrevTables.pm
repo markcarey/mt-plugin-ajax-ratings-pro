@@ -50,7 +50,7 @@ the replaced_by_class property as the basis for its own properties.
 sub legacy_properties {
     return {
         'AjaxRating::HotObject::Legacy' => {
-            datasource        => 'ajaxrating_hotobject',
+            datasource        => 'ar_hotobject',
             replaced_by_class => 'AjaxRating::HotObject',
         },
         'AjaxRating::Vote::Legacy' => {
@@ -58,7 +58,7 @@ sub legacy_properties {
             replaced_by_class => 'AjaxRating::Vote',
         },
         'AjaxRating::VoteSummary::Legacy' => {
-            datasource        => 'ajaxrating_votesummary',
+            datasource        => 'ajaxrating_vs',
             replaced_by_class => 'AjaxRating::VoteSummary',
         }
     }
