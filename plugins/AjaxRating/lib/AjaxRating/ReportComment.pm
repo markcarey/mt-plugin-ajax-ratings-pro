@@ -4,21 +4,21 @@ package AjaxRating::ReportComment;
 
 use strict;
 use warnings;
-use MT::App;
-@AjaxRating::ReportComment::ISA = qw( MT::App );
+use Sub::Install;
+
+use AjaxRating::App;
+@AjaxRating::ReportComment::ISA = qw( AjaxRating::App );
 
 sub init {
     my $app = shift;
     $app->SUPER::init(@_) or return;
     $app->add_methods(
-        report => \&report,
+        report  => \&default_mode,  # alias for backcompat
     );
-    $app->{default_mode} = 'report';
-    $app->{charset} = $app->{cfg}->PublishCharset;
     $app;
 }
 
-sub report {
+sub default_mode {
     my $app = shift;
     my $q = $app->{query};
     return "ERR||Invalid request, must use POST."
@@ -61,6 +61,13 @@ sub report {
             MT::Mail->send(\%head, $body);
     }
     return "ERR||This comment has been reported."
+}
+
+BEGIN { 
+    Sub::Install::install_sub({     # Backwards compat
+        code => 'default_mode',
+        as   => 'report'
+    });
 }
 
 1;
