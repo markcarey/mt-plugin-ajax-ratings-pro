@@ -2,23 +2,12 @@ package AjaxRating::GetVotes;
 
 use strict;
 use warnings;
-use MT::App;
-@AjaxRating::GetVotes::ISA = qw( MT::App );
+use AjaxRating::App;
+@AjaxRating::GetVotes::ISA = qw( AjaxRating::App );
 
 use constant ENFORCE_POST => 1;
 
-sub init {
-    my $app = shift;
-    $app->SUPER::init(@_) or return;
-    $app->add_methods(
-        default => \&get_votes,
-    );
-    $app->{default_mode} = 'default';
-    $app->{charset} = $app->{cfg}->PublishCharset;
-    $app;
-}
-
-sub get_votes {
+sub default_mode {
     my $app = shift;
     my $q   = $app->{query};
 
